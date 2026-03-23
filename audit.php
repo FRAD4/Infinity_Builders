@@ -24,8 +24,6 @@ $csrf_token = csrf_token_generate();
 $filters = [
     'entity_type' => $_GET['entity_type'] ?? '',
     'action_type' => $_GET['action_type'] ?? '',
-    'from_date' => $_GET['from_date'] ?? '',
-    'to_date' => $_GET['to_date'] ?? '',
     'limit' => 100
 ];
 
@@ -98,9 +96,6 @@ require_once 'partials/header.php';
         <option value="login" <?php echo $filters['action_type'] === 'login' ? 'selected' : ''; ?>>Login</option>
         <option value="logout" <?php echo $filters['action_type'] === 'logout' ? 'selected' : ''; ?>>Logout</option>
       </select>
-      
-      <input type="date" name="from_date" value="<?php echo htmlspecialchars($filters['from_date']); ?>" class="filter-date" placeholder="From">
-      <input type="date" name="to_date" value="<?php echo htmlspecialchars($filters['to_date']); ?>" class="filter-date" placeholder="To">
       
       <button type="submit" class="btn btn-sm"><i class="fa-solid fa-filter"></i></button>
       <a href="audit.php" class="btn btn-secondary btn-sm">Clear</a>
