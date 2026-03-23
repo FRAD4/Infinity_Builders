@@ -212,7 +212,7 @@ public_html/
 | Phase 6 | 🔲 Planned | Advanced reporting, export to PDF |
 | Phase 7 | 🔲 Planned | Multi-tenant / Organization support |
 
-**Progress**: ~16 hours logged of ~110 estimated
+**Progress**: ~16 hours logged (Phase 4/7) of ~110 estimated
 
 ---
 
@@ -244,8 +244,8 @@ Copyright © 2026 Franco Dall'Oglio. All rights reserved.
 **Franco Dall'Oglio**
 
 - GitHub: [@FRAD4](https://github.com/FRAD4)
-- LinkedIn: [franco-dalloglio](https://linkedin.com/in/franco-dalloglio)
-- Email: franco.dalloglio16@gmail.com
+- LinkedIn: [franco-dall-oglio](https://www.linkedin.com/in/franco-dall-oglio-258255237)
+- Email: francodalloglio@hotmail.com
 
 ---
 
