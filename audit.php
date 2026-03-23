@@ -78,27 +78,19 @@ require_once 'partials/header.php';
   <?php endforeach; ?>
 </div>
 
-<!-- Filters -->
-<div class="card" style="margin-bottom: 20px;">
-  <div class="card-header">
-    <h3>Filter Logs</h3>
-  </div>
-  
-  <form method="get" class="grid" style="gap: 16px; margin-top: 12px;">
-    <div class="form-group">
-      <label>Entity Type</label>
-      <select name="entity_type">
+<!-- Filters - Compact horizontal layout -->
+<div class="card filter-bar" style="margin-bottom: 20px; padding: 12px 16px;">
+  <form method="get" class="filter-form">
+    <div class="filter-group">
+      <select name="entity_type" class="filter-select">
         <option value="">All Types</option>
         <option value="projects" <?php echo $filters['entity_type'] === 'projects' ? 'selected' : ''; ?>>Projects</option>
         <option value="vendors" <?php echo $filters['entity_type'] === 'vendors' ? 'selected' : ''; ?>>Vendors</option>
         <option value="users" <?php echo $filters['entity_type'] === 'users' ? 'selected' : ''; ?>>Users</option>
         <option value="payments" <?php echo $filters['entity_type'] === 'payments' ? 'selected' : ''; ?>>Payments</option>
       </select>
-    </div>
-    
-    <div class="form-group">
-      <label>Action</label>
-      <select name="action_type">
+      
+      <select name="action_type" class="filter-select">
         <option value="">All Actions</option>
         <option value="create" <?php echo $filters['action_type'] === 'create' ? 'selected' : ''; ?>>Create</option>
         <option value="update" <?php echo $filters['action_type'] === 'update' ? 'selected' : ''; ?>>Update</option>
@@ -106,21 +98,12 @@ require_once 'partials/header.php';
         <option value="login" <?php echo $filters['action_type'] === 'login' ? 'selected' : ''; ?>>Login</option>
         <option value="logout" <?php echo $filters['action_type'] === 'logout' ? 'selected' : ''; ?>>Logout</option>
       </select>
-    </div>
-    
-    <div class="form-group">
-      <label>From Date</label>
-      <input type="date" name="from_date" value="<?php echo htmlspecialchars($filters['from_date']); ?>">
-    </div>
-    
-    <div class="form-group">
-      <label>To Date</label>
-      <input type="date" name="to_date" value="<?php echo htmlspecialchars($filters['to_date']); ?>">
-    </div>
-    
-    <div class="form-group" style="display: flex; align-items: flex-end;">
-      <button type="submit" class="btn">Apply Filters</button>
-      <a href="audit.php" class="btn btn-secondary" style="margin-left: 8px;">Clear</a>
+      
+      <input type="date" name="from_date" value="<?php echo htmlspecialchars($filters['from_date']); ?>" class="filter-date" placeholder="From">
+      <input type="date" name="to_date" value="<?php echo htmlspecialchars($filters['to_date']); ?>" class="filter-date" placeholder="To">
+      
+      <button type="submit" class="btn btn-sm"><i class="fa-solid fa-filter"></i></button>
+      <a href="audit.php" class="btn btn-secondary btn-sm">Clear</a>
     </div>
   </form>
 </div>

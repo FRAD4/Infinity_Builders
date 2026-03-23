@@ -831,6 +831,142 @@ tr:hover td {
     color: #F8FAFC;
 }
 
+/* ========================================
+ * COMPACT FILTER BAR
+ * For audit and other filtered pages
+ * ======================================== */
+
+.filter-bar {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.filter-form {
+    width: 100%;
+}
+
+.filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-select,
+.filter-date {
+    padding: 6px 10px;
+    font-size: 13px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    min-width: 120px;
+}
+
+.filter-select:focus,
+.filter-date:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.filter-date {
+    min-width: 130px;
+}
+
+/* Light mode adjustments for filters */
+[data-theme="light"] .filter-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .filter-select,
+[data-theme="light"] .filter-date {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+}
+
+/* Mobile responsive filters */
+@media (max-width: 768px) {
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-select,
+    .filter-date {
+        width: 100%;
+        min-width: unset;
+    }
+    
+    /* ========================================
+     * MOBILE TABLE FIXES
+     * ======================================== */
+    
+    .table-wrapper {
+        margin: 0 -16px;
+        padding: 0;
+        overflow-x: auto;
+    }
+    
+    table {
+        font-size: 13px;
+        min-width: 600px; /* Force scroll on small screens */
+    }
+    
+    th, td {
+        padding: 10px 12px;
+        white-space: nowrap;
+    }
+    
+    /* Truncate text in table cells */
+    td {
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Project/Client names in tables */
+    td strong {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+    }
+    
+    /* Right-aligned columns (numbers) */
+    td[style*="text-align: right"] {
+        text-align: right !important;
+        white-space: nowrap;
+    }
+    
+    /* Stat values - prevent overflow */
+    .stat-value {
+        font-size: 1.25rem !important;
+        word-break: break-all;
+        line-height: 1.2;
+    }
+    
+    /* Recent lists */
+    .recent-list li {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .recent-list li a,
+    .recent-list li span {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    /* Cards in reports */
+    .card {
+        overflow: hidden;
+    }
+}
+
 .sidebar-logo {
     display: flex;
     align-items: center;
@@ -1369,6 +1505,8 @@ tr:hover td {
     font-size: 28px;
     font-weight: 700;
     margin-bottom: 4px;
+    word-break: break-all;
+    line-height: 1.2;
 }
 
 .stat-label {
