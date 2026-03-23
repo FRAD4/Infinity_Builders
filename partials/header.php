@@ -172,10 +172,7 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
     <!-- Main Header -->
     <div class="main-header">
       <div class="main-header-title">
-        <h1 style="margin: 0 0 4px 0;"><?php echo htmlspecialchars($pageTitle ?? 'Dashboard'); ?></h1>
-        <div class="breadcrumb">
-          Infinity Builders &bull; <?php echo htmlspecialchars($pageTitle ?? 'Menu'); ?>
-        </div>
+        <h1><?php echo htmlspecialchars($pageTitle ?? 'Dashboard'); ?></h1>
       </div>
       
       <div class="main-header-actions">
@@ -185,28 +182,17 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
           <span class="notifications-badge" id="notificationsBadge" style="display: none;">0</span>
         </button>
         
-        <!-- Global Search Button -->
-        <button class="search-trigger" onclick="openGlobalSearch()" title="Search (Ctrl+K)">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-        
         <!-- Theme Toggle -->
         <div class="theme-toggle" title="Toggle theme">
-          <span class="theme-toggle-icon theme-toggle-dark">🌙</span>
-          <span class="theme-toggle-icon theme-toggle-light">☀️</span>
           <span class="theme-toggle-knob"></span>
         </div>
         
-        <!-- User Pill -->
-        <div class="user-pill">
-          <div class="user-pill-avatar">
-            <?php echo strtoupper(substr($currentUser ?? 'U', 0, 1)); ?>
-          </div>
-          <span class="user-pill-name"><?php echo htmlspecialchars($currentUser ?? 'User'); ?></span>
+        <!-- User Avatar -->
+        <div class="user-pill-avatar">
+          <?php echo strtoupper(substr($currentUser ?? 'U', 0, 1)); ?>
         </div>
-</div>
-  </div>
-</div>
+      </div>
+    </div>
 
 <!-- Notifications Panel -->
 <div class="notifications-panel" id="notificationsPanel">

@@ -1368,33 +1368,39 @@ tr:hover td {
 @media (max-width: 768px) {
     /* Show mobile menu button */
     .mobile-menu-btn {
-        display: block;
+        display: flex;
+        width: 40px;
+        height: 40px;
     }
     
-    /* Header wrapper for mobile */
+    /* Header wrapper - compact mobile header */
     .main-header-wrapper {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
-        z-index: 50;
-        background: var(--bg-secondary);
-        padding: 8px 12px;
+        z-index: 100;
+        background: var(--bg-primary);
+        border-bottom: 1px solid var(--border-color);
+        padding: 0;
+        height: 56px;
         display: flex;
         align-items: center;
-        gap: 8px;
-        border-bottom: 1px solid var(--border-color);
+        justify-content: space-between;
     }
     
     .main-header {
         flex: 1;
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
+        padding: 0 12px;
+        height: 100%;
     }
     
     .main-header-title h1 {
         font-size: 1rem;
+        font-weight: 600;
         margin: 0;
     }
     
@@ -1404,33 +1410,55 @@ tr:hover td {
         gap: 8px;
     }
     
-    .breadcrumb {
-        display: none;
+    /* Hide elements not needed on mobile */
+    .breadcrumb,
+    .search-trigger {
+        display: none !important;
     }
     
-    /* User pill smaller */
-    .user-pill {
-        padding: 2px 6px 2px 2px;
-    }
-    
+    /* Compact user avatar */
     .user-pill-avatar {
-        width: 24px;
-        height: 24px;
-        font-size: 10px;
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Compact notifications button */
+    .notifications-trigger {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 8px;
+    }
+    
+    /* Compact theme toggle */
+    .theme-toggle {
+        width: 36px;
+        height: 22px;
+        border-radius: 11px;
+    }
+    
+    .theme-toggle-knob {
+        width: 18px;
+        height: 18px;
     }
     
     /* Adjust main content for fixed header */
     .main-content {
         margin-left: 0;
         padding: 16px;
-        padding-top: 70px;
+        padding-top: 72px;
     }
     
     /* Hide sidebar off-screen */
     .sidebar {
         transform: translateX(-100%);
         width: 280px;
-        z-index: 100;
+        z-index: 200;
     }
     
     .sidebar.open {
@@ -1439,62 +1467,17 @@ tr:hover td {
     
     /* Sidebar overlay */
     .sidebar-overlay {
-        z-index: 99;
+        z-index: 150;
     }
     
-    /* Hide username on mobile */
-    .user-pill-name {
-        display: none;
-    }
-    
-    /* Make user pill smaller */
-    .user-pill {
-        padding: 4px 8px 4px 4px;
-    }
-    
-    .user-pill-avatar {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
-    }
-    
-    /* Header actions - tighter spacing */
-    .main-header-actions {
-        gap: 4px;
-    }
-    
-    /* Smaller buttons in header */
-    .notifications-trigger,
-    .search-trigger {
-        width: 36px;
-        height: 36px;
-        font-size: 14px;
-    }
-    
-    /* Theme toggle smaller on mobile */
-    .theme-toggle {
-        width: 36px;
-        height: 20px;
-        border-radius: 10px;
-    }
-    
-    .theme-toggle-knob {
-        width: 16px;
-        height: 16px;
-    }
-    
-    .theme-toggle-icon {
-        font-size: 10px;
-    }
-    
-    /* Notifications panel full width on mobile */
+    /* Notifications panel on mobile - full width dropdown */
     .notifications-panel {
         position: fixed;
-        top: 60px;
+        top: 64px;
         right: 8px;
         left: 8px;
         width: auto;
-        max-height: 70vh;
+        max-height: 60vh;
         z-index: 9999;
     }
     

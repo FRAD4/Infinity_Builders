@@ -246,44 +246,52 @@ function markAllRead() {
         var touchStartX = 0;
         var touchEndX = 0;
         var touchStartY = 0;
+        var touchMoved = false;
+        
         var sidebar = document.querySelector('.sidebar');
         var overlay = document.querySelector('.sidebar-overlay');
         
         if (sidebar && overlay) {
-            // Detect swipe on the whole document
+            // Touch start
             document.addEventListener('touchstart', function(e) {
                 touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
+                touchEndX = touchStartX;
+                touchMoved = false;
             }, { passive: true });
             
+            // Touch move - track movement
             document.addEventListener('touchmove', function(e) {
                 touchEndX = e.touches[0].clientX;
-                touchEndY = e.touches[0].clientY;
+                var touchCurrentY = e.touches[0].clientY;
+                
+                // If moved more than 10px, mark as moved
+                if (Math.abs(touchEndX - touchStartX) > 10 || Math.abs(touchCurrentY - touchStartY) > 10) {
+                    touchMoved = true;
+                }
             }, { passive: true });
             
+            // Touch end - check for swipe
             document.addEventListener('touchend', function(e) {
-                if (!touchStartX) return;
+                if (!touchMoved) return;
                 
                 var diffX = touchEndX - touchStartX;
-                var diffY = Math.abs(touchEndY - touchStartY);
-                var swipeThreshold = 60;
+                var diffY = Math.abs(e.changedTouches[0].clientY - touchStartY);
+                var swipeThreshold = 50;
                 
-                // Only register horizontal swipes (ignore diagonal)
-                if (diffY > diffX) return;
+                // Only register if horizontal movement is greater than vertical
+                if (diffY > Math.abs(diffX)) return;
                 
-                // Swipe right to open sidebar (only from left edge)
-                if (diffX > swipeThreshold && touchStartX < 80) {
+                // Swipe right from left edge to open
+                if (diffX > swipeThreshold && touchStartX < 100) {
                     sidebar.classList.add('open');
                     overlay.classList.add('active');
                 }
-                // Swipe left to close sidebar
+                // Swipe left to close
                 else if (diffX < -swipeThreshold) {
                     sidebar.classList.remove('open');
                     overlay.classList.remove('active');
                 }
-                
-                touchStartX = 0;
-                touchStartY = 0;
             }, { passive: true });
             
             // Close on overlay click
