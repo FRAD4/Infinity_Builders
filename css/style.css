@@ -72,15 +72,15 @@
 
 [data-theme="light"] {
     /* Backgrounds - Light slate palette */
-    --bg-primary: #FFFFFF;         /* Main background - pure white */
-    --bg-secondary: #F1F5F9;     /* Slightly darker areas */
+    --bg-primary: #F1F5F9;         /* Main background - slate-100 */
+    --bg-secondary: #E2E8F0;     /* Slightly darker areas */
     --bg-card: #FFFFFF;          /* Card backgrounds - pure white */
-    --bg-input: #F8FAFC;         /* Input fields */
+    --bg-input: #FFFFFF;          /* Input fields */
     --bg-hover: #E2E8F0;         /* Hover states */
     
     /* Text - High contrast for light mode */
-    --text-primary: #1E293B;     /* Primary text - dark slate */
-    --text-secondary: #475569;   /* Secondary text - slate-600 */
+    --text-primary: #0F172A;     /* Primary text - slate-900 */
+    --text-secondary: #334155;    /* Secondary text - slate-700 */
     --text-muted: #64748B;       /* Muted text - slate-500 */
     --text-inverse: #FFFFFF;     /* Text on light backgrounds */
     
@@ -727,16 +727,108 @@ tr:hover td {
 
 .sidebar-header {
     padding: 20px;
-    border-bottom: 1px solid #334155; /* Always dark - sidebar is always dark */
+    border-bottom: 1px solid #334155;
 }
 
+/* Sidebar navigation items - always dark */
+.sidebar {
+    background: #1E293B;
+    border-right-color: #334155;
+}
+
+.sidebar-nav {
+    background: #1E293B;
+}
+
+.nav-section-title {
+    color: #64748B !important; /* Fixed muted color for dark sidebar */
+}
+
+.nav-item {
+    color: #F8FAFC;
+}
+
+.nav-item i {
+    color: #F8FAFC;
+    opacity: 0.7;
+}
+
+.nav-item.active i,
+.nav-item:hover i {
+    color: #F8FAFC;
+    opacity: 1;
+}
+
+/* Sidebar footer - always dark */
 .sidebar-footer {
-    border-top: 1px solid #334155; /* Always dark - sidebar is always dark */
+    border-top-color: #334155;
+    background: #1E293B;
 }
 
 .sidebar-footer .text-secondary,
-.sidebar-footer .muted {
-    color: #94A3B8 !important; /* Fixed muted color for dark sidebar */
+.sidebar-footer .muted,
+.sidebar-footer span,
+.sidebar-footer div {
+    color: #94A3B8 !important;
+}
+
+.sidebar-footer button {
+    color: #94A3B8;
+}
+
+/* Sidebar footer elements - always dark */
+.sidebar-footer {
+    padding: 16px;
+}
+
+.sidebar-footer .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar-footer .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.sidebar-footer .sidebar-user-name {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #F8FAFC;
+}
+
+.sidebar-footer .sidebar-user-role {
+    font-size: 12px;
+    color: #94A3B8;
+}
+
+.sidebar-footer .sidebar-logout-form {
+    display: inline;
+}
+
+.sidebar-footer .sidebar-logout-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #94A3B8;
+    font-size: 14px;
+    padding: 4px;
+}
+
+.sidebar-footer .sidebar-logout-btn:hover {
+    color: #F8FAFC;
 }
 
 .sidebar-logo {

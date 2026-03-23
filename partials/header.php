@@ -133,33 +133,22 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
   </nav>
   
   <!-- User at bottom -->
-  <div class="sidebar-footer" style="padding: 16px; border-top: 1px solid var(--border-color);">
-    <div class="user-info" style="display: flex; align-items: center; gap: 12px;">
-      <div class="user-avatar" style="
-        width: 36px; 
-        height: 36px; 
-        border-radius: 50%; 
-        background: var(--gradient-primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 600;
-        font-size: 14px;
-      ">
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">
         <?php echo strtoupper(substr($currentUser ?? 'U', 0, 1)); ?>
       </div>
       <div style="flex: 1; min-width: 0;">
-        <div style="font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        <div class="sidebar-user-name">
           <?php echo htmlspecialchars($currentUser ?? 'User'); ?>
         </div>
-        <div style="font-size: 12px; color: var(--text-muted);">
+        <div class="sidebar-user-role">
           <?php echo htmlspecialchars(ucfirst($_SESSION['user_role'] ?? 'user')); ?>
         </div>
       </div>
-      <form method="post" action="logout.php" style="display:inline;">
+      <form method="post" action="logout.php" class="sidebar-logout-form">
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['logout_token'] ?? ''); ?>">
-        <button type="submit" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;" title="Logout">
+        <button type="submit" class="sidebar-logout-btn" title="Logout">
           <i class="fa-solid fa-right-from-bracket"></i>
         </button>
       </form>

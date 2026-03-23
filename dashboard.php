@@ -451,9 +451,20 @@ require_once 'partials/header.php';
         }
         
         const isDark = theme !== 'light';
-        const textColor = isDark ? '#F8FAFC' : '#0F172A';
-        const gridColor = isDark ? '#334155' : '#CBD5E1';
-        const tickColor = isDark ? '#94A3B8' : '#64748B';
+        
+        // Colors for dark mode
+        const darkText = '#F8FAFC';
+        const darkGrid = '#334155';
+        const darkTick = '#94A3B8';
+        
+        // Colors for light mode
+        const lightText = '#0F172A';
+        const lightGrid = '#E2E8F0';
+        const lightTick = '#64748B';
+        
+        const textColor = isDark ? darkText : lightText;
+        const gridColor = isDark ? darkGrid : lightGrid;
+        const tickColor = isDark ? darkTick : lightTick;
         
         Chart.defaults.color = textColor;
         Chart.defaults.borderColor = gridColor;
@@ -472,7 +483,8 @@ require_once 'partials/header.php';
                             <?php echo $chartData['budget']['remaining']; ?>
                         ],
                         backgroundColor: ['#3B82F6', '#22C55E', '#F59E0B'],
-                        borderRadius: 6
+                        borderRadius: 6,
+                        borderSkipped: false
                     }]
                 },
                 options: {
@@ -483,8 +495,8 @@ require_once 'partials/header.php';
                     },
                     scales: {
                         x: {
-                            ticks: { color: tickColor },
-                            grid: { color: gridColor }
+                            ticks: { color: tickColor, font: { weight: '500' } },
+                            grid: { color: gridColor, drawBorder: false }
                         },
                         y: {
                             beginAtZero: true,
@@ -494,7 +506,7 @@ require_once 'partials/header.php';
                                     return '$' + (value / 1000) + 'K';
                                 }
                             },
-                            grid: { color: gridColor }
+                            grid: { color: gridColor, drawBorder: false }
                         }
                     }
                 }
@@ -512,7 +524,7 @@ require_once 'partials/header.php';
                         label: 'Payments',
                         data: <?php echo json_encode($paymentTrend['data'] ?? []); ?>,
                         borderColor: '#F97316',
-                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        backgroundColor: isDark ? 'rgba(249, 115, 22, 0.15)' : 'rgba(249, 115, 22, 0.25)',
                         fill: true,
                         tension: 0.4,
                         pointRadius: 4,
@@ -527,8 +539,8 @@ require_once 'partials/header.php';
                     },
                     scales: {
                         x: {
-                            ticks: { color: tickColor },
-                            grid: { color: gridColor }
+                            ticks: { color: tickColor, font: { weight: '500' } },
+                            grid: { color: gridColor, drawBorder: false }
                         },
                         y: {
                             beginAtZero: true,
@@ -538,7 +550,7 @@ require_once 'partials/header.php';
                                     return '$' + (value / 1000) + 'K';
                                 }
                             },
-                            grid: { color: gridColor }
+                            grid: { color: gridColor, drawBorder: false }
                         }
                     }
                 }
