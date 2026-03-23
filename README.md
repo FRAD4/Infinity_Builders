@@ -29,9 +29,9 @@ A comprehensive **construction company management system** built with vanilla PH
 
 ---
 
-## 🇦🇷 Español
+## 🇺🇾 Español
 
-Sistema de gestión integral para empresas de construcción, desarrollado con **PHP vanilla, MySQL y CSS moderno**. Diseñado para компании estadounidenses del sector construcción para administrar proyectos, proveedores, usuarios y seguimiento financiero desde un único panel.
+Sistema de gestión integral para empresas de construcción, desarrollado con **PHP vanilla, MySQL y CSS moderno**. Diseñado para empresas estadounidenses del sector construcción para administrar proyectos, proveedores, usuarios y seguimiento financiero desde un único panel.
 
 ### Funcionalidades principales
 - **Gestión de Proyectos**: Seguimiento de proyectos activos, completados y en pausa con presupuestos y cronogramas
@@ -212,7 +212,7 @@ public_html/
 | Phase 6 | 🔲 Planned | Advanced reporting, export to PDF |
 | Phase 7 | 🔲 Planned | Multi-tenant / Organization support |
 
-**Progress**: ~16 hours logged (Phase 4/7) of ~110 estimated
+**Progress**: ~50 hours logged (Phase 4/7) of ~110 estimated
 
 ---
 
