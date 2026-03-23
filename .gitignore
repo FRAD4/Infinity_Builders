@@ -1,0 +1,29 @@
+# Dependencies
+vendor/
+PHPMailer.zip
+
+# Uploads (user-generated content)
+uploads/*
+!uploads/.gitkeep
+
+# Environment and config
+config.local.php
+.env
+
+# Logs
+php_errorlog
+*.log
+
+# IDE/OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Composer
+composer.json
+composer.lock
+
+# Cache
+cache/
+temp/
