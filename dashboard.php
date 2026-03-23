@@ -433,94 +433,126 @@ require_once 'partials/header.php';
 <!-- Dashboard Charts Script -->
 <?php if (in_array($userRole, ['admin', 'pm', 'accounting']) && ($preferences['show_charts'] ?? '1') === '1'): ?>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof Chart === 'undefined') {
-        console.error('Chart.js not loaded!');
-        return;
-    }
-    
-    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-    const textColor = isDark ? '#F8FAFC' : '#0F172A';
-    const gridColor = isDark ? '#334155' : '#E2E8F0';
-    
-    Chart.defaults.color = textColor;
-    Chart.defaults.borderColor = gridColor;
-    
-    // Budget Overview (Bar)
-    const budgetCtx = document.getElementById('budgetChart');
-    if (budgetCtx) {
-        new Chart(budgetCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Total Budget', 'Paid', 'Remaining'],
-                datasets: [{
-                    data: [
-                        <?php echo $chartData['budget']['total']; ?>,
-                        <?php echo $chartData['budget']['paid']; ?>,
-                        <?php echo $chartData['budget']['remaining']; ?>
-                    ],
-                    backgroundColor: ['#3B82F6', '#22C55E', '#F59E0B'],
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+(function() {
+    function initCharts() {
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js not loaded!');
+            return;
+        }
+        
+        // Get actual resolved theme (not 'system')
+        const htmlEl = document.documentElement;
+        let theme = htmlEl.getAttribute('data-theme');
+        
+        // If theme is 'system', resolve it now
+        if (theme === 'system') {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            theme = prefersDark ? 'dark' : 'light';
+        }
+        
+        const isDark = theme !== 'light';
+        const textColor = isDark ? '#F8FAFC' : '#0F172A';
+        const gridColor = isDark ? '#334155' : '#CBD5E1';
+        const tickColor = isDark ? '#94A3B8' : '#64748B';
+        
+        Chart.defaults.color = textColor;
+        Chart.defaults.borderColor = gridColor;
+        
+        // Budget Overview (Bar)
+        const budgetCtx = document.getElementById('budgetChart');
+        if (budgetCtx) {
+            new Chart(budgetCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Total Budget', 'Paid', 'Remaining'],
+                    datasets: [{
+                        data: [
+                            <?php echo $chartData['budget']['total']; ?>,
+                            <?php echo $chartData['budget']['paid']; ?>,
+                            <?php echo $chartData['budget']['remaining']; ?>
+                        ],
+                        backgroundColor: ['#3B82F6', '#22C55E', '#F59E0B'],
+                        borderRadius: 6
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + (value / 1000) + 'K';
-                            }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: tickColor },
+                            grid: { color: gridColor }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { 
+                                color: tickColor,
+                                callback: function(value) {
+                                    return '$' + (value / 1000) + 'K';
+                                }
+                            },
+                            grid: { color: gridColor }
                         }
                     }
                 }
-            }
-        });
-    }
-    
-    // Payment Trend (Line)
-    const paymentCtx = document.getElementById('paymentChart');
-    if (paymentCtx) {
-        new Chart(paymentCtx, {
-            type: 'line',
-            data: {
-                labels: <?php echo json_encode($paymentTrend['labels'] ?? []); ?>,
-                datasets: [{
-                    label: 'Payments',
-                    data: <?php echo json_encode($paymentTrend['data'] ?? []); ?>,
-                    borderColor: '#F97316',
-                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#F97316'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+            });
+        }
+        
+        // Payment Trend (Line)
+        const paymentCtx = document.getElementById('paymentChart');
+        if (paymentCtx) {
+            new Chart(paymentCtx, {
+                type: 'line',
+                data: {
+                    labels: <?php echo json_encode($paymentTrend['labels'] ?? []); ?>,
+                    datasets: [{
+                        label: 'Payments',
+                        data: <?php echo json_encode($paymentTrend['data'] ?? []); ?>,
+                        borderColor: '#F97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#F97316'
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + (value / 1000) + 'K';
-                            }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: tickColor },
+                            grid: { color: gridColor }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { 
+                                color: tickColor,
+                                callback: function(value) {
+                                    return '$' + (value / 1000) + 'K';
+                                }
+                            },
+                            grid: { color: gridColor }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     }
-});
+    
+    // Run after DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCharts);
+    } else {
+        initCharts();
+    }
+})();
 </script>
 <?php endif; ?>
 

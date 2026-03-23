@@ -124,8 +124,11 @@ $redirectUrl = $pageUrls[$defaultPage] ?? 'dashboard.php';
 $stmt = $pdo->prepare("SELECT value FROM user_preferences WHERE user_id = ? AND preference_key = 'dashboard_theme'");
 $stmt->execute([$user['id']]);
 $themePref = $stmt->fetch(PDO::FETCH_ASSOC);
-if ($themePref && $themePref['value'] !== 'system') {
+if ($themePref && $themePref['value']) {
     $_SESSION['theme_override'] = $themePref['value'];
+} else {
+    // No preference saved - clear any old value
+    unset($_SESSION['theme_override']);
 }
 
 header("Location: $redirectUrl");

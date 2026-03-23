@@ -727,7 +727,16 @@ tr:hover td {
 
 .sidebar-header {
     padding: 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #334155; /* Always dark - sidebar is always dark */
+}
+
+.sidebar-footer {
+    border-top: 1px solid #334155; /* Always dark - sidebar is always dark */
+}
+
+.sidebar-footer .text-secondary,
+.sidebar-footer .muted {
+    color: #94A3B8 !important; /* Fixed muted color for dark sidebar */
 }
 
 .sidebar-logo {

@@ -8,14 +8,11 @@
  *   - $currentPage (string) - Active nav item (e.g. 'dashboard', 'projects')
  */
 
-// Theme resolution: session override > localStorage > system preference
+// Theme resolution order:
+// 1. Server session override (from settings preference)
+// 2. 'system' placeholder (resolved client-side via localStorage/prefers-color-scheme)
 $themePref = $_SESSION['theme_override'] ?? null;
-if ($themePref === 'system' || $themePref === null) {
-    // Will be resolved client-side with prefers-color-scheme
-    $initialTheme = 'system';
-} else {
-    $initialTheme = $themePref;
-}
+$initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="<?php echo htmlspecialchars($initialTheme); ?>">
@@ -44,18 +41,22 @@ if ($themePref === 'system' || $themePref === null) {
       const html = document.documentElement;
       const serverTheme = html.getAttribute('data-theme');
       
-      // If server sent 'system', resolve it now
-      if (serverTheme === 'system') {
+      // Priority: localStorage saved choice > server preference > system default
+      const savedTheme = localStorage.getItem('infinity-theme');
+      
+      if (savedTheme && savedTheme !== 'system') {
+        // User has explicit choice saved - use it
+        html.setAttribute('data-theme', savedTheme);
+      } else if (serverTheme === 'system') {
+        // No saved choice and server says 'system' - detect from OS
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
       }
+      // If server sent explicit dark/light, keep it
       
-      // Sync to localStorage
-      localStorage.setItem('infinity-theme', html.getAttribute('data-theme'));
-      
-      // Listen for system preference changes
+      // Listen for system preference changes (only if no explicit choice)
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-        if (localStorage.getItem('infinity-theme') === 'system') {
+        if (!localStorage.getItem('infinity-theme') || localStorage.getItem('infinity-theme') === 'system') {
           html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
         }
       });
