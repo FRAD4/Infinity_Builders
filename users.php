@@ -415,17 +415,21 @@ require_once 'partials/header.php';
 
 <script>
 function openCreateUserModal() {
-  document.getElementById('createUserModal').style.display = 'block';
+  var modal = document.getElementById('createUserModal');
+  if (modal) modal.style.display = 'block';
 }
 
 function closeCreateUserModal() {
-  document.getElementById('createUserModal').style.display = 'none';
+  var modal = document.getElementById('createUserModal');
+  if (modal) modal.style.display = 'none';
 }
 
 function confirmDelete(userId, username, isLastAdmin) {
   var modal = document.getElementById('deleteModal');
   var message = document.getElementById('deleteMessage');
   var userIdInput = document.getElementById('deleteUserId');
+  
+  if (!modal || !message || !userIdInput) return;
   
   userIdInput.value = userId;
   
@@ -439,7 +443,8 @@ function confirmDelete(userId, username, isLastAdmin) {
 }
 
 function closeDeleteModal() {
-  document.getElementById('deleteModal').style.display = 'none';
+  var modal = document.getElementById('deleteModal');
+  if (modal) modal.style.display = 'none';
 }
 
 // Close modals when clicking outside

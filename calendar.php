@@ -221,7 +221,8 @@ document.addEventListener('DOMContentLoaded', function() {
             info.el.title = info.event.title;
         },
         datesSet: function(info) {
-            document.getElementById('calendarTitle').textContent = info.view.title;
+            var calendarTitle = document.getElementById('calendarTitle');
+            if (calendarTitle) calendarTitle.textContent = info.view.title;
         },
         height: 'auto',
         dayMaxEvents: 3,
@@ -233,20 +234,25 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar.render();
     
     // Navigation buttons
-    document.getElementById('btnToday').addEventListener('click', function() {
+    var btnToday = document.getElementById('btnToday');
+    var btnPrev = document.getElementById('btnPrev');
+    var btnNext = document.getElementById('btnNext');
+    var calendarView = document.getElementById('calendarView');
+    
+    if (btnToday) btnToday.addEventListener('click', function() {
         calendar.today();
     });
     
-    document.getElementById('btnPrev').addEventListener('click', function() {
+    if (btnPrev) btnPrev.addEventListener('click', function() {
         calendar.prev();
     });
     
-    document.getElementById('btnNext').addEventListener('click', function() {
+    if (btnNext) btnNext.addEventListener('click', function() {
         calendar.next();
     });
     
     // View selector
-    document.getElementById('calendarView').addEventListener('change', function(e) {
+    if (calendarView) calendarView.addEventListener('change', function(e) {
         calendar.changeView(e.target.value);
     });
 });
@@ -260,8 +266,8 @@ function showProjectModal(event) {
     const typeLabel = props.type === 'start' ? '📅 Start Date' : '🏁 End Date';
     const date = event.startStr;
     
-    modalTitle.textContent = props.project_name;
-    modalBody.innerHTML = `
+    if (modalTitle) modalTitle.textContent = props.project_name || 'Project Details';
+    if (modalBody) modalBody.innerHTML = `
         <div style="display: grid; gap: 16px;">
             <div>
                 <label style="color: var(--text-secondary); font-size: 0.875rem;">Event Type</label>
@@ -274,7 +280,7 @@ function showProjectModal(event) {
             <div>
                 <label style="color: var(--text-secondary); font-size: 0.875rem;">Status</label>
                 <div>
-                    <span class="badge badge-${props.status.toLowerCase().replace(' ', '-')}">${props.status}</span>
+                    <span class="badge badge-${(props.status || 'planned').toLowerCase().replace(' ', '-')}">${props.status || 'Planned'}</span>
                 </div>
             </div>
             <div>
@@ -291,7 +297,7 @@ function showProjectModal(event) {
         </div>
     `;
     
-    modal.style.display = 'flex';
+    if (modal) modal.style.display = 'flex';
 }
 
 function formatDate(dateStr) {
@@ -305,7 +311,8 @@ function formatDate(dateStr) {
 }
 
 function closeModal() {
-    document.getElementById('projectModal').style.display = 'none';
+    var projectModal = document.getElementById('projectModal');
+    if (projectModal) projectModal.style.display = 'none';
 }
 
 // Close modal on backdrop click

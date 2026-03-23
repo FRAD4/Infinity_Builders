@@ -394,6 +394,12 @@ button.loading::after {
     background: #DC2626;
 }
 
+.bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .btn-sm {
     padding: 6px 12px;
     font-size: 12px;
@@ -1459,6 +1465,8 @@ tr:hover td {
         transform: translateX(-100%);
         width: 280px;
         z-index: 200;
+        /* Enable horizontal swipe detection */
+        touch-action: pan-y;
     }
     
     .sidebar.open {

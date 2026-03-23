@@ -438,6 +438,16 @@ require_once 'partials/header.php';
       <form method="post" id="projects-table-form">
         <input type="hidden" name="action" id="projects-table-action" value="">
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+        <?php 
+          $edit_roles = ['admin', 'pm'];
+          if (isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], $edit_roles)): 
+        ?>
+        <div class="bulk-actions" style="margin-bottom:10px;min-height:32px;">
+          <button type="button" id="bulk-delete-projects-btn" class="btn btn-danger" style="opacity:0.6;cursor:not-allowed;">
+            <i class="fa-solid fa-trash"></i> Delete Selected
+          </button>
+        </div>
+        <?php endif; ?>
         <div class="table-wrapper">
           <table>
             <thead>
@@ -922,14 +932,17 @@ require_once 'partials/header.php';
     });
     
     // Real-time validation
-    document.getElementById('create-name').addEventListener('blur', function() {
-      var formGroup = this.closest('.form-group');
-      if (!this.value.trim() && this.value.length > 0) {
-        formGroup.classList.add('error');
-      } else {
-        formGroup.classList.remove('error');
-      }
-    });
+    var createNameInput = document.getElementById('create-name');
+    if (createNameInput) {
+      createNameInput.addEventListener('blur', function() {
+        var formGroup = this.closest('.form-group');
+        if (!this.value.trim() && this.value.length > 0) {
+          formGroup.classList.add('error');
+        } else {
+          formGroup.classList.remove('error');
+        }
+      });
+    }
   }
 
   // Edit project modal
@@ -941,14 +954,23 @@ require_once 'partials/header.php';
   document.querySelectorAll('.edit-project-btn').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
-      document.getElementById('edit-project-id').value = btn.getAttribute('data-id');
-      document.getElementById('edit-name').value = btn.getAttribute('data-name') || '';
-      document.getElementById('edit-client').value = btn.getAttribute('data-client') || '';
-      document.getElementById('edit-status').value = btn.getAttribute('data-status') || 'Planned';
-      document.getElementById('edit-budget').value = btn.getAttribute('data-budget') || '';
-      document.getElementById('edit-start').value = btn.getAttribute('data-start') || '';
-      document.getElementById('edit-end').value = btn.getAttribute('data-end') || '';
-      document.getElementById('edit-notes').value = btn.getAttribute('data-notes') || '';
+      var editProjectId = document.getElementById('edit-project-id');
+      var editName = document.getElementById('edit-name');
+      var editClient = document.getElementById('edit-client');
+      var editStatus = document.getElementById('edit-status');
+      var editBudget = document.getElementById('edit-budget');
+      var editStart = document.getElementById('edit-start');
+      var editEnd = document.getElementById('edit-end');
+      var editNotes = document.getElementById('edit-notes');
+      
+      if (editProjectId) editProjectId.value = btn.getAttribute('data-id') || '';
+      if (editName) editName.value = btn.getAttribute('data-name') || '';
+      if (editClient) editClient.value = btn.getAttribute('data-client') || '';
+      if (editStatus) editStatus.value = btn.getAttribute('data-status') || 'Planned';
+      if (editBudget) editBudget.value = btn.getAttribute('data-budget') || '';
+      if (editStart) editStart.value = btn.getAttribute('data-start') || '';
+      if (editEnd) editEnd.value = btn.getAttribute('data-end') || '';
+      if (editNotes) editNotes.value = btn.getAttribute('data-notes') || '';
       if (editModal) editModal.style.display = 'flex';
     });
   });
@@ -959,15 +981,15 @@ require_once 'partials/header.php';
   if (editDeleteBtn && editForm) {
     editDeleteBtn.addEventListener('click', function() {
       if (confirm('Delete this project? This cannot be undone.')) {
+        var editProjectId = document.getElementById('edit-project-id');
         tableAction.value = 'delete_project';
-        document.getElementById('edit-project-id').value = document.getElementById('edit-project-id').value;
-        // Submit the main form with delete action
-        tableAction.value = 'delete_project';
-        var deleteInput = document.createElement('input');
-        deleteInput.type = 'hidden';
-        deleteInput.name = 'project_id';
-        deleteInput.value = document.getElementById('edit-project-id').value;
-        tableForm.appendChild(deleteInput);
+        if (editProjectId) {
+          var deleteInput = document.createElement('input');
+          deleteInput.type = 'hidden';
+          deleteInput.name = 'project_id';
+          deleteInput.value = editProjectId.value;
+          tableForm.appendChild(deleteInput);
+        }
         tableForm.submit();
       }
     });
@@ -1056,41 +1078,53 @@ require_once 'partials/header.php';
       
       // Show corresponding content
       document.querySelectorAll('.tab-pane').forEach(function(pane) { pane.classList.remove('active'); });
-      document.getElementById('tab-' + tabId).classList.add('active');
+      var targetTab = document.getElementById('tab-' + tabId);
+      if (targetTab) targetTab.classList.add('active');
     });
   });
 
 // Edit button from detail modal
-  document.getElementById('detail-edit-btn').addEventListener('click', function() {
-    // Collect all data from the current modal display
-    // We'll get it from the hidden rows data
-    
-    // Find the row with matching data from the detail modal
-    var currentRow = null;
-    
-    // Find which row's data is showing in the modal
-    var detailNameText = detailName ? detailName.textContent : '';
-    document.querySelectorAll('.project-row').forEach(function(row) {
-      if (row.getAttribute('data-name') === detailNameText) {
-        currentRow = row;
+  if (detailEditBtn) {
+    detailEditBtn.addEventListener('click', function() {
+      // Collect all data from the current modal display
+      // We'll get it from the hidden rows data
+      
+      // Find the row with matching data from the detail modal
+      var currentRow = null;
+      
+      // Find which row's data is showing in the modal
+      var detailNameText = detailName ? detailName.textContent : '';
+      document.querySelectorAll('.project-row').forEach(function(row) {
+        if (row.getAttribute('data-name') === detailNameText) {
+          currentRow = row;
+        }
+      });
+      
+      if (currentRow) {
+        if (detailModal) detailModal.style.display = 'none';
+        
+        var editProjectId = document.getElementById('edit-project-id');
+        var editName = document.getElementById('edit-name');
+        var editClient = document.getElementById('edit-client');
+        var editStatus = document.getElementById('edit-status');
+        var editBudget = document.getElementById('edit-budget');
+        var editStart = document.getElementById('edit-start');
+        var editEnd = document.getElementById('edit-end');
+        var editNotes = document.getElementById('edit-notes');
+        
+        if (editProjectId) editProjectId.value = currentRow.getAttribute('data-id') || '';
+        if (editName) editName.value = currentRow.getAttribute('data-name') || '';
+        if (editClient) editClient.value = currentRow.getAttribute('data-client') || '';
+        if (editStatus) editStatus.value = currentRow.getAttribute('data-status') || 'Planned';
+        if (editBudget) editBudget.value = currentRow.getAttribute('data-budget') || '';
+        if (editStart) editStart.value = currentRow.getAttribute('data-start') || '';
+        if (editEnd) editEnd.value = currentRow.getAttribute('data-end') || '';
+        if (editNotes) editNotes.value = currentRow.getAttribute('data-notes') || '';
+        
+        if (editModal) editModal.style.display = 'flex';
       }
     });
-    
-    if (currentRow) {
-      if (detailModal) detailModal.style.display = 'none';
-      
-      document.getElementById('edit-project-id').value = currentRow.getAttribute('data-id');
-      document.getElementById('edit-name').value = currentRow.getAttribute('data-name') || '';
-      document.getElementById('edit-client').value = currentRow.getAttribute('data-client') || '';
-      document.getElementById('edit-status').value = currentRow.getAttribute('data-status') || 'Planned';
-      document.getElementById('edit-budget').value = currentRow.getAttribute('data-budget') || '';
-      document.getElementById('edit-start').value = currentRow.getAttribute('data-start') || '';
-      document.getElementById('edit-end').value = currentRow.getAttribute('data-end') || '';
-      document.getElementById('edit-notes').value = currentRow.getAttribute('data-notes') || '';
-      
-      if (editModal) editModal.style.display = 'flex';
-    }
-  });
+  }
   
   // Auto-open project from search
   var openProjectId = '<?php echo $openProjectId; ?>';

@@ -477,11 +477,11 @@ require_once 'partials/header.php';
                 data: {
                     labels: ['Total Budget', 'Paid', 'Remaining'],
                     datasets: [{
-                        data: [
-                            <?php echo $chartData['budget']['total']; ?>,
-                            <?php echo $chartData['budget']['paid']; ?>,
-                            <?php echo $chartData['budget']['remaining']; ?>
-                        ],
+                        data: <?php echo json_encode([
+                            $chartData['budget']['total'] ?? 0,
+                            $chartData['budget']['paid'] ?? 0,
+                            $chartData['budget']['remaining'] ?? 0
+                        ]); ?>,
                         backgroundColor: ['#3B82F6', '#22C55E', '#F59E0B'],
                         borderRadius: 6,
                         borderSkipped: false

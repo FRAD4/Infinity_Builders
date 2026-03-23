@@ -59,7 +59,6 @@ document.getElementById('globalSearchInput').addEventListener('input', function(
         fetch('api/search.php?q=' + encodeURIComponent(query))
             .then(r => r.text())
             .then(text => {
-                console.log('Search response:', text);
                 try {
                     const data = JSON.parse(text);
                     if (data.error) {
@@ -213,94 +212,98 @@ function markAllRead() {
 <!-- Loading State Handler -->
 <script>
 (function() {
-    // Show loading overlay on form submit
-    document.querySelectorAll('form').forEach(function(form) {
-        form.addEventListener('submit', function(e) {
-            // Only show if not already handled
-            if (!form.dataset.loading) {
-                form.dataset.loading = 'true';
-                const btn = form.querySelector('button[type="submit"]');
-                if (btn && !btn.classList.contains('no-loading')) {
-                    btn.classList.add('loading');
+    function init() {
+        // Show loading overlay on form submit
+        document.querySelectorAll('form').forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                if (!form.dataset.loading) {
+                    form.dataset.loading = 'true';
+                    var btn = form.querySelector('button[type="submit"]');
+                    if (btn && !btn.classList.contains('no-loading')) {
+                        btn.classList.add('loading');
+                    }
                 }
-            }
+            });
         });
-    });
-    
-    // Global loading functions
-    window.showLoading = function() {
-        document.getElementById('loadingOverlay').style.display = 'flex';
-    };
-    
-    window.hideLoading = function() {
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.querySelectorAll('.loading').forEach(function(el) {
-            el.classList.remove('loading');
-        });
-    };
-    
-    // ==========================================
-    // MOBILE SWIPE GESTURE FOR SIDEBAR
-    // ==========================================
-    (function() {
-        var touchStartX = 0;
-        var touchEndX = 0;
-        var touchStartY = 0;
-        var touchMoved = false;
         
-        var sidebar = document.querySelector('.sidebar');
-        var overlay = document.querySelector('.sidebar-overlay');
+        // Global loading functions
+        window.showLoading = function() {
+            var el = document.getElementById('loadingOverlay');
+            if (el) el.style.display = 'flex';
+        };
         
-        if (sidebar && overlay) {
-            // Touch start
-            document.addEventListener('touchstart', function(e) {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-                touchEndX = touchStartX;
-                touchMoved = false;
-            }, { passive: true });
+        window.hideLoading = function() {
+            var el = document.getElementById('loadingOverlay');
+            if (el) el.style.display = 'none';
+            document.querySelectorAll('.loading').forEach(function(el) {
+                el.classList.remove('loading');
+            });
+        };
+        
+        // Mobile Swipe Gesture for Sidebar
+        (function() {
+            var touchStartX = 0;
+            var touchEndX = 0;
+            var touchStartY = 0;
+            var touchMoved = false;
             
-            // Touch move - track movement
-            document.addEventListener('touchmove', function(e) {
-                touchEndX = e.touches[0].clientX;
-                var touchCurrentY = e.touches[0].clientY;
-                
-                // If moved more than 10px, mark as moved
-                if (Math.abs(touchEndX - touchStartX) > 10 || Math.abs(touchCurrentY - touchStartY) > 10) {
-                    touchMoved = true;
-                }
-            }, { passive: true });
+            var sidebar = document.querySelector('.sidebar');
+            var overlay = document.querySelector('.sidebar-overlay');
             
-            // Touch end - check for swipe
-            document.addEventListener('touchend', function(e) {
-                if (!touchMoved) return;
+            if (sidebar && overlay) {
+                document.addEventListener('touchstart', function(e) {
+                    if (e.touches && e.touches[0]) {
+                        touchStartX = e.touches[0].clientX;
+                        touchStartY = e.touches[0].clientY;
+                        touchEndX = touchStartX;
+                        touchMoved = false;
+                    }
+                }, { passive: true });
                 
-                var diffX = touchEndX - touchStartX;
-                var diffY = Math.abs(e.changedTouches[0].clientY - touchStartY);
-                var swipeThreshold = 50;
+                document.addEventListener('touchmove', function(e) {
+                    if (e.touches && e.touches[0]) {
+                        touchEndX = e.touches[0].clientX;
+                        var touchCurrentY = e.touches[0].clientY;
+                        
+                        if (Math.abs(touchEndX - touchStartX) > 10 || Math.abs(touchCurrentY - touchStartY) > 10) {
+                            touchMoved = true;
+                        }
+                    }
+                }, { passive: true });
                 
-                // Only register if horizontal movement is greater than vertical
-                if (diffY > Math.abs(diffX)) return;
+                document.addEventListener('touchend', function(e) {
+                    if (!touchMoved) return;
+                    
+                    var diffX = touchEndX - touchStartX;
+                    var diffY = e.changedTouches && e.changedTouches[0] ? Math.abs(e.changedTouches[0].clientY - touchStartY) : 0;
+                    var swipeThreshold = 50;
+                    
+                    if (diffY > Math.abs(diffX)) return;
+                    
+                    if (diffX > swipeThreshold && touchStartX < 100) {
+                        sidebar.classList.add('open');
+                        overlay.classList.add('active');
+                    }
+                    else if (diffX < -swipeThreshold) {
+                        sidebar.classList.remove('open');
+                        overlay.classList.remove('active');
+                    }
+                }, { passive: true });
                 
-                // Swipe right from left edge to open
-                if (diffX > swipeThreshold && touchStartX < 100) {
-                    sidebar.classList.add('open');
-                    overlay.classList.add('active');
-                }
-                // Swipe left to close
-                else if (diffX < -swipeThreshold) {
+                overlay.addEventListener('click', function() {
                     sidebar.classList.remove('open');
                     overlay.classList.remove('active');
-                }
-            }, { passive: true });
-            
-            // Close on overlay click
-            overlay.addEventListener('click', function() {
-                sidebar.classList.remove('open');
-                overlay.classList.remove('active');
-            });
-        }
-    })();
+                });
+            }
+        })();
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
 </script>
 
 </body>

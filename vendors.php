@@ -373,6 +373,11 @@ require_once 'partials/header.php';
       <form method="post" id="vendor-table-form">
         <input type="hidden" name="action" id="vendor-table-action" value="">
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+        <div class="bulk-actions" style="margin-bottom:10px;min-height:32px;">
+          <button type="button" id="bulk-delete-btn" class="btn btn-danger" style="opacity:0.6;cursor:not-allowed;display:none;">
+            <i class="fa-solid fa-trash"></i> Delete Selected
+          </button>
+        </div>
         <table>
           <thead>
             <tr>
@@ -692,8 +697,10 @@ require_once 'partials/header.php';
 
   function updateBulkButtonState() {
     var anyChecked = Array.from(checkboxes).some(function(cb) { return cb.checked; });
-    bulkBtn.style.opacity = anyChecked ? '1' : '0.6';
-    bulkBtn.style.cursor  = anyChecked ? 'pointer' : 'not-allowed';
+    if (bulkBtn) {
+      bulkBtn.style.opacity = anyChecked ? '1' : '0.6';
+      bulkBtn.style.cursor  = anyChecked ? 'pointer' : 'not-allowed';
+    }
   }
 
   if (selectAll) {
@@ -740,13 +747,21 @@ require_once 'partials/header.php';
   document.querySelectorAll('.edit-vendor-btn').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
-      document.getElementById('edit-vendor-id').value = btn.getAttribute('data-id');
-      document.getElementById('edit-name').value      = btn.getAttribute('data-name');
-      document.getElementById('edit-type').value      = btn.getAttribute('data-type');
-      document.getElementById('edit-trade').value     = btn.getAttribute('data-trade');
-      document.getElementById('edit-phone').value     = btn.getAttribute('data-phone');
-      document.getElementById('edit-email').value     = btn.getAttribute('data-email');
-      document.getElementById('edit-action').value    = 'update_vendor';
+      var editVendorId = document.getElementById('edit-vendor-id');
+      var editName = document.getElementById('edit-name');
+      var editType = document.getElementById('edit-type');
+      var editTrade = document.getElementById('edit-trade');
+      var editPhone = document.getElementById('edit-phone');
+      var editEmail = document.getElementById('edit-email');
+      var editAction = document.getElementById('edit-action');
+      
+      if (editVendorId) editVendorId.value = btn.getAttribute('data-id') || '';
+      if (editName) editName.value = btn.getAttribute('data-name') || '';
+      if (editType) editType.value = btn.getAttribute('data-type') || '';
+      if (editTrade) editTrade.value = btn.getAttribute('data-trade') || '';
+      if (editPhone) editPhone.value = btn.getAttribute('data-phone') || '';
+      if (editEmail) editEmail.value = btn.getAttribute('data-email') || '';
+      if (editAction) editAction.value = 'update_vendor';
       if (editModal) editModal.style.display = 'flex';
     });
   });
@@ -757,7 +772,8 @@ require_once 'partials/header.php';
   if (editDeleteBtn && editForm) {
     editDeleteBtn.addEventListener('click', function() {
       if (confirm('Delete this vendor?')) {
-        document.getElementById('edit-action').value = 'delete_vendor';
+        var editAction = document.getElementById('edit-action');
+        if (editAction) editAction.value = 'delete_vendor';
         editForm.submit();
       }
     });
