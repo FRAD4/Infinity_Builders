@@ -4,8 +4,13 @@
  * Infinity Builders Design System
  */
 ?>
-
+ 
 </main><!-- end .main-content -->
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+</div>
 
 <!-- Sidebar Toggle Script -->
 <script>
@@ -204,6 +209,79 @@ function markAllRead() {
 
 <!-- App JS -->
 <script src="js/theme.js"></script>
+
+<!-- Loading State Handler -->
+<script>
+(function() {
+    // Show loading overlay on form submit
+    document.querySelectorAll('form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            // Only show if not already handled
+            if (!form.dataset.loading) {
+                form.dataset.loading = 'true';
+                const btn = form.querySelector('button[type="submit"]');
+                if (btn && !btn.classList.contains('no-loading')) {
+                    btn.classList.add('loading');
+                }
+            }
+        });
+    });
+    
+    // Global loading functions
+    window.showLoading = function() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    };
+    
+    window.hideLoading = function() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.querySelectorAll('.loading').forEach(function(el) {
+            el.classList.remove('loading');
+        });
+    };
+    
+    // ==========================================
+    // MOBILE SWIPE GESTURE FOR SIDEBAR
+    // ==========================================
+    var touchStartX = 0;
+    var touchEndX = 0;
+    var sidebar = document.querySelector('.sidebar');
+    var overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar && overlay) {
+        // Detect swipe on the whole document
+        document.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        
+        document.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+        
+        function handleSwipe() {
+            var swipeThreshold = 50;
+            var diff = touchEndX - touchStartX;
+            
+            // Swipe right to open sidebar
+            if (diff > swipeThreshold && touchStartX < 50) {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            }
+            // Swipe left to close sidebar
+            else if (diff < -swipeThreshold) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        }
+        
+        // Close on overlay click
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        });
+    }
+})();
+</script>
 
 </body>
 </html>

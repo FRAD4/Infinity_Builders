@@ -465,8 +465,22 @@ require_once 'partials/header.php';
             <tbody>
               <?php if (!$projects): ?>
                 <tr>
-                  <td colspan="8" class="muted">
-                    No projects yet. Use the form on the left to add your first job.
+                  <td colspan="8">
+                    <div class="empty-state">
+                      <div class="empty-state-icon">🏗️</div>
+                      <h3>No projects yet</h3>
+                      <p>Get started by creating your first project</p>
+                      <?php if (isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], ['admin', 'pm'])): ?>
+                      <button type="button" class="btn" id="open-create-project-modal-empty">
+                        <i class="fa-solid fa-plus"></i> Create Project
+                      </button>
+                      <script>
+                        document.getElementById('open-create-project-modal-empty')?.addEventListener('click', function() {
+                          document.getElementById('open-create-project-modal')?.click();
+                        });
+                      </script>
+                      <?php endif; ?>
+                    </div>
                   </td>
                 </tr>
               <?php else: ?>
@@ -787,12 +801,13 @@ require_once 'partials/header.php';
 
       <div class="form-group">
         <label for="create-name">Project Name *</label>
-        <input type="text" name="name" id="create-name" required>
+        <input type="text" name="name" id="create-name" required placeholder="Enter project name">
+        <span class="form-error">Project name is required</span>
       </div>
 
       <div class="form-group">
         <label for="create-client">Client / Owner</label>
-        <input type="text" name="client_name" id="create-client">
+        <input type="text" name="client_name" id="create-client" placeholder="Client or owner name">
       </div>
 
       <div class="form-group">
@@ -807,7 +822,8 @@ require_once 'partials/header.php';
 
       <div class="form-group">
         <label for="create-budget">Total Budget</label>
-        <input type="number" step="0.01" name="total_budget" id="create-budget" placeholder="0.00">
+        <input type="number" step="0.01" name="total_budget" id="create-budget" placeholder="0.00" min="0">
+        <span class="input-hint">Enter 0 or leave blank if no budget</span>
       </div>
 
       <div class="form-group">
@@ -883,6 +899,38 @@ require_once 'partials/header.php';
 
   if (createCloseBtn) createCloseBtn.addEventListener('click', function(e) { e.preventDefault(); if (createModal) createModal.style.display = 'none'; });
   if (createModal) createModal.addEventListener('click', function(e) { if (e.target === createModal && createModal) createModal.style.display = 'none'; });
+  
+  // Form validation for create project
+  var createForm = document.getElementById('create-project-form');
+  if (createForm) {
+    createForm.addEventListener('submit', function(e) {
+      var nameInput = document.getElementById('create-name');
+      var formGroup = nameInput.closest('.form-group');
+      
+      // Clear previous error
+      formGroup.classList.remove('error');
+      
+      // Validate
+      if (!nameInput.value.trim()) {
+        e.preventDefault();
+        formGroup.classList.add('error');
+        nameInput.focus();
+        return false;
+      }
+      
+      return true;
+    });
+    
+    // Real-time validation
+    document.getElementById('create-name').addEventListener('blur', function() {
+      var formGroup = this.closest('.form-group');
+      if (!this.value.trim() && this.value.length > 0) {
+        formGroup.classList.add('error');
+      } else {
+        formGroup.classList.remove('error');
+      }
+    });
+  }
 
   // Edit project modal
   var editModal = document.getElementById('edit-project-modal');

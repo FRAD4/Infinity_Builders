@@ -387,7 +387,25 @@ require_once 'partials/header.php';
           </thead>
           <tbody>
             <?php if (empty($vendors)): ?>
-              <tr><td colspan="7" class="muted">No vendors yet. Use the form to add your first one.</td></tr>
+              <tr>
+                <td colspan="7">
+                  <div class="empty-state">
+                    <div class="empty-state-icon">👷</div>
+                    <h3>No vendors yet</h3>
+                    <p>Start building your vendor directory</p>
+                    <?php if (isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], ['admin', 'pm'])): ?>
+                    <button type="button" class="btn" id="open-create-vendor-modal-empty">
+                      <i class="fa-solid fa-plus"></i> Add Vendor
+                    </button>
+                    <script>
+                      document.getElementById('open-create-vendor-modal-empty')?.addEventListener('click', function() {
+                        document.getElementById('open-create-vendor-modal')?.click();
+                      });
+                    </script>
+                    <?php endif; ?>
+                  </div>
+                </td>
+              </tr>
             <?php else: ?>
               <?php foreach ($vendors as $v): ?>
                 <tr class="vendor-row"

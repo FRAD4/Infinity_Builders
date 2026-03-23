@@ -251,7 +251,21 @@ require_once 'partials/header.php';
       <tbody>
         <?php if (!$users): ?>
           <tr>
-            <td colspan="<?php echo $hasRole ? 5 : 3; ?>" class="muted">No users found.</td>
+            <td colspan="<?php echo $hasRole ? 5 : 3; ?>">
+              <div class="empty-state">
+                <div class="empty-state-icon">👥</div>
+                <h3>No users found</h3>
+                <p>Invite team members to collaborate</p>
+                <button type="button" class="btn" id="open-create-user-modal-empty">
+                  <i class="fa-solid fa-user-plus"></i> Add User
+                </button>
+                <script>
+                  document.getElementById('open-create-user-modal-empty')?.addEventListener('click', function() {
+                    document.getElementById('open-create-user-modal')?.click();
+                  });
+                </script>
+              </div>
+            </td>
           </tr>
         <?php else: ?>
           <?php foreach ($users as $u): ?>

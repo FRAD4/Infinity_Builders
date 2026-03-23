@@ -179,6 +179,9 @@ require_once 'partials/header.php';
     <p class="text-secondary">Financial summaries and project status overview</p>
   </div>
   <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <a href="print-reports.php" target="_blank" class="btn btn-sm" style="background: var(--primary); color: white;">
+      <i class="fa-solid fa-print"></i> Print / PDF
+    </a>
     <a href="export-projects.php" class="btn btn-secondary btn-sm">
       <i class="fa-solid fa-download"></i> Projects
     </a>
@@ -190,7 +193,7 @@ require_once 'partials/header.php';
     </a>
     <?php if ($userRole === 'admin'): ?>
     <a href="export-audit.php" class="btn btn-secondary btn-sm">
-      <i class="fa-solid fa-download"></i> Audit Log
+      <i class="fa-solid fa-clipboard-list"></i> Audit
     </a>
     <?php endif; ?>
   </div>
