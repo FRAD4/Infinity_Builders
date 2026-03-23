@@ -72,21 +72,21 @@
 
 [data-theme="light"] {
     /* Backgrounds - Light slate palette */
-    --bg-primary: #F8FAFC;       /* Main background - almost white */
+    --bg-primary: #FFFFFF;         /* Main background - pure white */
     --bg-secondary: #F1F5F9;     /* Slightly darker areas */
     --bg-card: #FFFFFF;          /* Card backgrounds - pure white */
     --bg-input: #F8FAFC;         /* Input fields */
     --bg-hover: #E2E8F0;         /* Hover states */
     
-    /* Text - Dark slate for readability */
-    --text-primary: #0F172A;     /* Primary text - dark */
-    --text-secondary: #475569;   /* Secondary text */
-    --text-muted: #64748B;       /* Very muted text */
+    /* Text - High contrast for light mode */
+    --text-primary: #1E293B;     /* Primary text - dark slate */
+    --text-secondary: #475569;   /* Secondary text - slate-600 */
+    --text-muted: #64748B;       /* Muted text - slate-500 */
     --text-inverse: #FFFFFF;     /* Text on light backgrounds */
     
-    /* Borders */
-    --border-color: #E2E8F0;
-    --border-light: #F1F5F9;
+    /* Borders - More visible in light mode */
+    --border-color: #CBD5E1;
+    --border-light: #E2E8F0;
     
     /* Shadows - Lighter for light mode */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -99,6 +99,36 @@
     --sidebar-text-muted: #94A3B8;
     --sidebar-active: rgba(249, 115, 22, 0.15);
     --sidebar-active-text: #F97316;
+}
+
+/* ========================================
+ * LIGHT MODE - BADGE OVERRIDES
+ * Better contrast for light backgrounds
+ * ======================================== */
+
+[data-theme="light"] .badge-active {
+    background: rgba(34, 197, 94, 0.2);
+    color: #166534;
+}
+
+[data-theme="light"] .badge-planned {
+    background: rgba(59, 130, 246, 0.2);
+    color: #1E40AF;
+}
+
+[data-theme="light"] .badge-on-hold {
+    background: rgba(245, 158, 11, 0.2);
+    color: #92400E;
+}
+
+[data-theme="light"] .badge-complete {
+    background: rgba(139, 92, 246, 0.2);
+    color: #5B21B6;
+}
+
+[data-theme="light"] .badge-gray {
+    background: #E2E8F0;
+    color: #475569;
 }
 
 /* ========================================
@@ -707,9 +737,10 @@ tr:hover td {
 }
 
 .sidebar-logo img {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: auto;
+    height: 32px;
+    border-radius: 6px;
+    object-fit: contain;
 }
 
 .sidebar-logo-text {
@@ -751,8 +782,8 @@ tr:hover td {
 }
 
 .nav-item:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
 }
 
 .nav-item.active {
