@@ -1368,12 +1368,10 @@ tr:hover td {
 @media (max-width: 768px) {
     /* Show mobile menu button */
     .mobile-menu-btn {
-        display: flex;
-        width: 40px;
-        height: 40px;
+        display: block;
     }
     
-    /* Header wrapper - compact mobile header */
+    /* Header wrapper for mobile */
     .main-header-wrapper {
         position: fixed;
         top: 0;
@@ -1381,12 +1379,12 @@ tr:hover td {
         right: 0;
         z-index: 100;
         background: var(--bg-primary);
-        border-bottom: 1px solid var(--border-color);
         padding: 0;
         height: 56px;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        border-bottom: 1px solid var(--border-color);
     }
     
     .main-header {
@@ -1410,21 +1408,23 @@ tr:hover td {
         gap: 8px;
     }
     
-    /* Hide elements not needed on mobile */
     .breadcrumb,
     .search-trigger {
         display: none !important;
     }
     
-    /* Compact user avatar */
+    /* User avatar - standalone on mobile */
     .user-pill-avatar {
         width: 32px;
         height: 32px;
         font-size: 12px;
+        background: var(--gradient-primary);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
+        color: white;
+        font-weight: 600;
     }
     
     /* Compact notifications button */
@@ -1470,7 +1470,7 @@ tr:hover td {
         z-index: 150;
     }
     
-    /* Notifications panel on mobile - full width dropdown */
+    /* Notifications panel on mobile */
     .notifications-panel {
         position: fixed;
         top: 64px;
@@ -1478,6 +1478,22 @@ tr:hover td {
         left: 8px;
         width: auto;
         max-height: 60vh;
+        z-index: 9999;
+    }
+    
+    /* Hide username on mobile */
+    .user-pill-name {
+        display: none;
+    }
+    
+    /* Cards take full width */
+    .notifications-panel {
+        position: fixed;
+        top: 60px;
+        right: 8px;
+        left: 8px;
+        width: auto;
+        max-height: 70vh;
         z-index: 9999;
     }
     

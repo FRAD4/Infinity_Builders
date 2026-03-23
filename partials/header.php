@@ -156,6 +156,9 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
   </div>
 </aside>
 
+<!-- Sidebar Overlay (for mobile) -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <!-- Main Content -->
 <main class="main-content">
   
@@ -166,10 +169,7 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
       <i class="fa-solid fa-bars"></i>
     </button>
     
-    <!-- Sidebar Overlay (mobile) -->
-    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-  
-    <!-- Main Header -->
+    <!-- Main Header Content -->
     <div class="main-header">
       <div class="main-header-title">
         <h1><?php echo htmlspecialchars($pageTitle ?? 'Dashboard'); ?></h1>
@@ -193,6 +193,7 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
         </div>
       </div>
     </div>
+  </div>
 
 <!-- Notifications Panel -->
 <div class="notifications-panel" id="notificationsPanel">
