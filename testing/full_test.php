@@ -54,8 +54,8 @@ echo "✓ Created admin user: admin@infinity.com / admin123\n\n";
 // Regular user - SHA256 of 'user123'
 $user_sha256 = hash('sha256', 'user123');
 $conn->query("DELETE FROM users WHERE email = 'user@test.com'");
-$conn->query("INSERT INTO users (username, email, password, password_algo, role) VALUES ('Test User', 'user@test.com', '$user_sha256', 'sha256', 'user')");
-echo "✓ Created test user: user@test.com / user123\n\n";
+$conn->query("INSERT INTO users (username, email, password, password_algo, role) VALUES ('Test User', 'user@test.com', '$user_sha256', 'sha256', 'viewer')");
+echo "✓ Created test user: user@test.com / user123 (viewer role)\n\n";
 
 // ============================================
 // TEST 1: CSRF Protection
@@ -151,7 +151,7 @@ $result = $conn->query("SELECT COUNT(*) as cnt FROM users WHERE role = 'admin'")
 $row = $result->fetch_assoc();
 test("Admin users exist", $row['cnt'] >= 1, "Found: " . $row['cnt']);
 
-$result = $conn->query("SELECT COUNT(*) as cnt FROM users WHERE role = 'user'");
+$result = $conn->query("SELECT COUNT(*) as cnt FROM users WHERE role = 'viewer'");
 $row = $result->fetch_assoc();
 test("Regular users exist", $row['cnt'] >= 1, "Found: " . $row['cnt']);
 

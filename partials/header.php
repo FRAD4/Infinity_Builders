@@ -8,16 +8,17 @@
  *   - $currentPage (string) - Active nav item (e.g. 'dashboard', 'projects')
  */
 
-// Get theme: session override > localStorage > default dark
-$themeOverride = $_SESSION['theme_override'] ?? null;
-if ($themeOverride) {
-    $initialTheme = $themeOverride;
+// Theme resolution: session override > localStorage > system preference
+$themePref = $_SESSION['theme_override'] ?? null;
+if ($themePref === 'system' || $themePref === null) {
+    // Will be resolved client-side with prefers-color-scheme
+    $initialTheme = 'system';
 } else {
-    $initialTheme = '<script>document.write(localStorage.getItem("infinity-theme") || "dark")</script>';
+    $initialTheme = $themePref;
 }
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="<?php echo htmlspecialchars($initialTheme); ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,6 +37,30 @@ if ($themeOverride) {
   
   <!-- App CSS -->
   <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Theme Initialization (must run before body renders) -->
+  <script>
+    (function() {
+      const html = document.documentElement;
+      const serverTheme = html.getAttribute('data-theme');
+      
+      // If server sent 'system', resolve it now
+      if (serverTheme === 'system') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      }
+      
+      // Sync to localStorage
+      localStorage.setItem('infinity-theme', html.getAttribute('data-theme'));
+      
+      // Listen for system preference changes
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        if (localStorage.getItem('infinity-theme') === 'system') {
+          html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        }
+      });
+    })();
+  </script>
 </head>
 <body>
 

@@ -120,7 +120,7 @@ require_once "$BASE_PATH/includes/security.php";
 $username = 'TestUser';
 $email = 'testuser@example.com';
 $password = 'testpass123';
-$role = 'user';
+$role = 'viewer';
 
 $password_hash = hash_password($password);
 

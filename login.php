@@ -103,7 +103,31 @@ $_SESSION['user_role'] = $user['role'];
 // DEBUG
 error_log("LOGIN: user_id=" . $user['id'] . " role=" . $user['role']);
 
-// Redirect based on role (admins may be redirected elsewhere in future)
-header('Location: dashboard.php');
+// Load user preferences for redirect destination
+$stmt = $pdo->prepare("SELECT value FROM user_preferences WHERE user_id = ? AND preference_key = 'default_page'");
+$stmt->execute([$user['id']]);
+$pref = $stmt->fetch(PDO::FETCH_ASSOC);
+$defaultPage = $pref['value'] ?? 'dashboard';
+
+// Map to actual page URLs
+$pageUrls = [
+    'dashboard' => 'dashboard.php',
+    'projects' => 'projects.php',
+    'vendors' => 'vendors.php',
+    'reports' => 'reports.php',
+    'calendar' => 'calendar.php'
+];
+
+$redirectUrl = $pageUrls[$defaultPage] ?? 'dashboard.php';
+
+// Apply theme preference
+$stmt = $pdo->prepare("SELECT value FROM user_preferences WHERE user_id = ? AND preference_key = 'dashboard_theme'");
+$stmt->execute([$user['id']]);
+$themePref = $stmt->fetch(PDO::FETCH_ASSOC);
+if ($themePref && $themePref['value'] !== 'system') {
+    $_SESSION['theme_override'] = $themePref['value'];
+}
+
+header("Location: $redirectUrl");
 exit;
 ?>

@@ -197,9 +197,10 @@ require_once 'partials/header.php';
           <label for="dashboard_layout">Dashboard Layout</label>
           <select id="dashboard_layout" name="dashboard_layout" class="form-control">
             <option value="default" <?php echo ($preferences['dashboard_layout'] ?? 'default') === 'default' ? 'selected' : ''; ?>>Default</option>
-            <option value="compact" <?php echo ($preferences['dashboard_layout'] ?? '') === 'compact' ? 'selected' : ''; ?>>Compact</option>
-            <option value="expanded" <?php echo ($preferences['dashboard_layout'] ?? '') === 'expanded' ? 'selected' : ''; ?>>Expanded</option>
+            <option value="compact" disabled>Compact (Coming Soon)</option>
+            <option value="expanded" disabled>Expanded (Coming Soon)</option>
           </select>
+          <small class="text-secondary" style="font-size: 12px;">Additional layouts coming in future updates</small>
         </div>
         
         <div class="form-group">
