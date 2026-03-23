@@ -1458,6 +1458,46 @@ tr:hover td {
         font-size: 12px;
     }
     
+    /* Header actions - tighter spacing */
+    .main-header-actions {
+        gap: 4px;
+    }
+    
+    /* Smaller buttons in header */
+    .notifications-trigger,
+    .search-trigger {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+    
+    /* Theme toggle smaller on mobile */
+    .theme-toggle {
+        width: 36px;
+        height: 20px;
+        border-radius: 10px;
+    }
+    
+    .theme-toggle-knob {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .theme-toggle-icon {
+        font-size: 10px;
+    }
+    
+    /* Notifications panel full width on mobile */
+    .notifications-panel {
+        position: fixed;
+        top: 60px;
+        right: 8px;
+        left: 8px;
+        width: auto;
+        max-height: 70vh;
+        z-index: 9999;
+    }
+    
     /* Cards take full width */
     .card {
         margin-bottom: 16px;
@@ -2641,8 +2681,8 @@ tr:hover td {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
     overflow: hidden;
     animation: slideDown 0.2s ease;
 }

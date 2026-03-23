@@ -117,6 +117,33 @@ if (in_array($userRole, ['admin', 'pm'])) {
             ];
         }
         
+        // Get overdue tasks (past due date and not completed)
+        try {
+            $stmt = $pdo->query("
+                SELECT t.id, t.title, t.due_date, p.name as project_name
+                FROM project_tasks t
+                LEFT JOIN projects p ON t.project_id = p.id
+                WHERE t.status NOT IN ('completed', 'cancelled')
+                AND t.due_date IS NOT NULL
+                AND t.due_date < CURDATE()
+                ORDER BY t.due_date ASC
+                LIMIT 5
+            ");
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $notifications[] = [
+                    'id' => 'task_overdue_' . $row['id'],
+                    'type' => 'warning',
+                    'icon' => 'fa-list-check',
+                    'title' => 'Task Overdue',
+                    'message' => "Task '{$row['title']}' is past due",
+                    'url' => 'projects.php?open=' . $row['project_id'],
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+            }
+        } catch (Exception $e) {
+            // Tasks table might not exist
+        }
+        
     } catch (Exception $e) {
         // Table might not exist
     }

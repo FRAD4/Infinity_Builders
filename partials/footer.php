@@ -242,45 +242,57 @@ function markAllRead() {
     // ==========================================
     // MOBILE SWIPE GESTURE FOR SIDEBAR
     // ==========================================
-    var touchStartX = 0;
-    var touchEndX = 0;
-    var sidebar = document.querySelector('.sidebar');
-    var overlay = document.querySelector('.sidebar-overlay');
-    
-    if (sidebar && overlay) {
-        // Detect swipe on the whole document
-        document.addEventListener('touchstart', function(e) {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
+    (function() {
+        var touchStartX = 0;
+        var touchEndX = 0;
+        var touchStartY = 0;
+        var sidebar = document.querySelector('.sidebar');
+        var overlay = document.querySelector('.sidebar-overlay');
         
-        document.addEventListener('touchend', function(e) {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, { passive: true });
-        
-        function handleSwipe() {
-            var swipeThreshold = 50;
-            var diff = touchEndX - touchStartX;
+        if (sidebar && overlay) {
+            // Detect swipe on the whole document
+            document.addEventListener('touchstart', function(e) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
             
-            // Swipe right to open sidebar
-            if (diff > swipeThreshold && touchStartX < 50) {
-                sidebar.classList.add('open');
-                overlay.classList.add('active');
-            }
-            // Swipe left to close sidebar
-            else if (diff < -swipeThreshold) {
+            document.addEventListener('touchmove', function(e) {
+                touchEndX = e.touches[0].clientX;
+                touchEndY = e.touches[0].clientY;
+            }, { passive: true });
+            
+            document.addEventListener('touchend', function(e) {
+                if (!touchStartX) return;
+                
+                var diffX = touchEndX - touchStartX;
+                var diffY = Math.abs(touchEndY - touchStartY);
+                var swipeThreshold = 60;
+                
+                // Only register horizontal swipes (ignore diagonal)
+                if (diffY > diffX) return;
+                
+                // Swipe right to open sidebar (only from left edge)
+                if (diffX > swipeThreshold && touchStartX < 80) {
+                    sidebar.classList.add('open');
+                    overlay.classList.add('active');
+                }
+                // Swipe left to close sidebar
+                else if (diffX < -swipeThreshold) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+                
+                touchStartX = 0;
+                touchStartY = 0;
+            }, { passive: true });
+            
+            // Close on overlay click
+            overlay.addEventListener('click', function() {
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
-            }
+            });
         }
-        
-        // Close on overlay click
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-        });
-    }
-})();
+    })();
 </script>
 
 </body>
