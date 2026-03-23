@@ -391,8 +391,7 @@ require_once 'partials/header.php';
       <input type="text" name="search" value="<?php echo htmlspecialchars($filters['search']); ?>" placeholder="Search projects..." class="filter-input">
       
       <select name="status" class="filter-select">
-        <option value="">All Statuses</option>
-        <option value="all" <?php echo ($filters['status'] ?? '') === 'all' ? 'selected' : ''; ?>>All</option>
+        <option value="">All</option>
         <option value="Planned" <?php echo ($filters['status'] ?? '') === 'Planned' ? 'selected' : ''; ?>>Planned</option>
         <option value="Active" <?php echo ($filters['status'] ?? '') === 'Active' ? 'selected' : ''; ?>>Active</option>
         <option value="On Hold" <?php echo ($filters['status'] ?? '') === 'On Hold' ? 'selected' : ''; ?>>On Hold</option>
