@@ -225,12 +225,12 @@ require_once 'partials/header.php';
     <div class="card-header">
       <h3>Project Status</h3>
     </div>
-    <div class="card-subtitle">Overview of all projects</div>
-    
-    <div style="padding: 16px 0;">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-        <span>Status</span>
-        <span>Count</span>
+    <div class="card-body">
+      <div class="card-subtitle">Overview of all projects</div>
+      
+      <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding: 0 4px;">
+        <span class="text-secondary">Status</span>
+        <span class="text-secondary">Count</span>
       </div>
       
       <?php 
@@ -242,7 +242,7 @@ require_once 'partials/header.php';
         ];
         foreach ($statuses as $label => $count): 
       ?>
-        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+        <div style="display: flex; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--border-color);">
           <span><?php echo htmlspecialchars($label); ?></span>
           <strong><?php echo $count; ?></strong>
         </div>
@@ -251,7 +251,7 @@ require_once 'partials/header.php';
       <div style="margin-top: 16px; padding-top: 12px; border-top: 2px solid var(--border-color);">
         <div style="display: flex; justify-content: space-between;">
           <span>Total Budget</span>
-          <strong style="color: var(--primary);">$<?php echo number_format($projectStats['total_budget'], 2); ?></strong>
+          <strong class="text-primary">$<?php echo number_format($projectStats['total_budget'], 2); ?></strong>
         </div>
       </div>
     </div>
@@ -262,14 +262,14 @@ require_once 'partials/header.php';
     <div class="card-header">
       <h3>Vendors by Type</h3>
     </div>
-    <div class="card-subtitle">Distribution of vendor categories</div>
-    
-    <div style="padding: 16px 0;">
+    <div class="card-body">
+      <div class="card-subtitle">Distribution of vendor categories</div>
+      
       <?php if (empty($vendorStats['by_type'])): ?>
         <p class="muted">No vendors found.</p>
       <?php else: ?>
         <?php foreach ($vendorStats['by_type'] as $type => $count): ?>
-          <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+          <div style="display: flex; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--border-color);">
             <span><?php echo htmlspecialchars($type); ?></span>
             <strong><?php echo $count; ?></strong>
           </div>
@@ -286,6 +286,88 @@ require_once 'partials/header.php';
     <div class="card-header">
       <h3>Project Status</h3>
     </div>
+    <div class="card-body">
+      <div class="card-subtitle">Distribution by status</div>
+      <div style="height: 220px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="projectStatusChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendor Type Chart -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Vendors by Type</h3>
+    </div>
+    <div class="card-body">
+      <div class="card-subtitle">Distribution by category</div>
+      <div style="height: 220px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="vendorTypeChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task Analytics -->
+<div class="grid grid-2" style="margin-top: 24px;">
+  <!-- Task Summary -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Task Summary</h3>
+    </div>
+    <div class="card-body">
+      <div class="card-subtitle">Project task status overview</div>
+      
+      <?php if ($taskStats['total'] === 0): ?>
+        <p class="muted">No tasks found.</p>
+      <?php else: ?>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px;">
+          <div class="stat-card stat-card-blue">
+            <div class="stat-value"><?php echo $taskStats['total']; ?></div>
+            <div class="stat-label">Total Tasks</div>
+          </div>
+          <div class="stat-card stat-card-green">
+            <div class="stat-value"><?php echo $taskStats['completed']; ?></div>
+            <div class="stat-label">Completed</div>
+          </div>
+          <div class="stat-card stat-card-yellow">
+            <div class="stat-value"><?php echo $taskStats['in_progress']; ?></div>
+            <div class="stat-label">In Progress</div>
+          </div>
+          <div class="stat-card stat-card-info">
+            <div class="stat-value"><?php echo $taskStats['pending']; ?></div>
+            <div class="stat-label">Pending</div>
+          </div>
+        </div>
+        
+        <?php if ($taskStats['total'] > 0): ?>
+        <div style="margin-top: 16px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span class="text-secondary">Completion Rate</span>
+            <strong><?php echo round(($taskStats['completed'] / $taskStats['total']) * 100); ?>%</strong>
+          </div>
+          <div style="background: var(--bg-hover); height: 8px; border-radius: 4px; overflow: hidden;">
+            <div style="background: var(--success); height: 100%; width: <?php echo ($taskStats['completed'] / $taskStats['total']) * 100; ?>%;"></div>
+          </div>
+        </div>
+        <?php endif; ?>
+      <?php endif; ?>
+    </div>
+  </div>
+  
+  <!-- Task Status Chart -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Task Status</h3>
+    </div>
+    <div class="card-body">
+      <div class="card-subtitle">Distribution by status</div>
+      <div style="height: 220px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="taskStatusChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
     <div class="card-subtitle">Distribution by status</div>
     <div style="padding: 20px; height: 250px; display: flex; align-items: center; justify-content: center;">
       <canvas id="projectStatusChart"></canvas>
@@ -368,9 +450,11 @@ require_once 'partials/header.php';
   <div class="card-header">
     <h3>Payment Trend</h3>
   </div>
-  <div class="card-subtitle">Monthly payment activity (last 12 months)</div>
-  <div style="padding: 20px; height: 300px;">
-    <canvas id="paymentTrendChart"></canvas>
+  <div class="card-body">
+    <div class="card-subtitle">Monthly payment activity (last 12 months)</div>
+    <div style="height: 280px;">
+      <canvas id="paymentTrendChart"></canvas>
+    </div>
   </div>
 </div>
 
@@ -379,38 +463,40 @@ require_once 'partials/header.php';
   <div class="card-header">
     <h3>Payment Summary</h3>
   </div>
-  <div class="card-subtitle">Vendor payment analytics</div>
-  
-  <div class="stats-grid" style="margin-top: 16px;">
-    <div class="stat-card stat-card-blue">
-      <div class="stat-value">$<?php echo number_format($paymentStats['this_month'] / 1000, 1); ?>K</div>
-      <div class="stat-label">This Month</div>
-    </div>
+  <div class="card-body">
+    <div class="card-subtitle">Vendor payment analytics</div>
     
-    <div class="stat-card stat-card-blue">
-      <div class="stat-value">$<?php echo number_format($paymentStats['this_year'] / 1000, 0); ?>K</div>
-      <div class="stat-label">This Year</div>
-    </div>
-    
-    <div class="stat-card stat-card-green">
-      <div class="stat-value">$<?php echo number_format($paymentStats['total_paid'] / 1000, 0); ?>K</div>
-      <div class="stat-label">All Time</div>
-    </div>
-  </div>
-  
-  <?php if (!empty($paymentStats['by_year'])): ?>
-    <div style="margin-top: 24px;">
-      <h4 style="margin-bottom: 12px;">Payments by Year</h4>
-      <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-        <?php foreach ($paymentStats['by_year'] as $yr => $total): ?>
-          <div style="background: var(--bg-elevated); padding: 12px 16px; border-radius: 8px; min-width: 100px;">
-            <div style="font-size: 12px; color: var(--text-muted);"><?php echo $yr; ?></div>
-            <div style="font-size: 18px; font-weight: 600;">$<?php echo number_format($total / 1000, 0); ?>K</div>
-          </div>
-        <?php endforeach; ?>
+    <div class="stats-grid" style="margin-top: 12px;">
+      <div class="stat-card stat-card-blue">
+        <div class="stat-value">$<?php echo number_format($paymentStats['this_month'] / 1000, 1); ?>K</div>
+        <div class="stat-label">This Month</div>
+      </div>
+      
+      <div class="stat-card stat-card-blue">
+        <div class="stat-value">$<?php echo number_format($paymentStats['this_year'] / 1000, 0); ?>K</div>
+        <div class="stat-label">This Year</div>
+      </div>
+      
+      <div class="stat-card stat-card-green">
+        <div class="stat-value">$<?php echo number_format($paymentStats['total_paid'] / 1000, 0); ?>K</div>
+        <div class="stat-label">All Time</div>
       </div>
     </div>
-  <?php endif; ?>
+    
+    <?php if (!empty($paymentStats['by_year'])): ?>
+      <div style="margin-top: 20px;">
+        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Payments by Year</h4>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <?php foreach ($paymentStats['by_year'] as $yr => $total): ?>
+            <div style="background: var(--bg-hover); padding: 10px 14px; border-radius: 8px; min-width: 90px;">
+              <div style="font-size: 11px; color: var(--text-muted);"><?php echo $yr; ?></div>
+              <div style="font-size: 16px; font-weight: 600;">$<?php echo number_format($total / 1000, 0); ?>K</div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    <?php endif; ?>
+  </div>
 </div>
 
 <!-- Top Vendors -->
@@ -418,32 +504,34 @@ require_once 'partials/header.php';
   <div class="card-header">
     <h3>Top Vendors by Payments</h3>
   </div>
-  <div class="card-subtitle">Highest paid vendors</div>
-  
-  <?php if (empty($topVendors)): ?>
-    <p class="muted" style="padding: 16px 0;">No payment data available.</p>
-  <?php else: ?>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Vendor</th>
-            <th>Type</th>
-            <th style="text-align: right;">Total Paid</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($topVendors as $v): ?>
+  <div class="card-body">
+    <div class="card-subtitle">Highest paid vendors</div>
+    
+    <?php if (empty($topVendors)): ?>
+      <p class="muted">No payment data available.</p>
+    <?php else: ?>
+      <div class="table-wrapper">
+        <table>
+          <thead>
             <tr>
-              <td><strong><?php echo htmlspecialchars($v['name']); ?></strong></td>
-              <td><?php echo htmlspecialchars($v['type'] ?? '-'); ?></td>
-              <td style="text-align: right;">$<?php echo number_format($v['total_paid'], 2); ?></td>
+              <th>Vendor</th>
+              <th>Type</th>
+              <th style="text-align: right;">Total Paid</th>
             </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-  <?php endif; ?>
+          </thead>
+          <tbody>
+            <?php foreach ($topVendors as $v): ?>
+              <tr>
+                <td><strong><?php echo htmlspecialchars($v['name']); ?></strong></td>
+                <td><?php echo htmlspecialchars($v['type'] ?? '-'); ?></td>
+                <td class="text-right">$<?php echo number_format($v['total_paid'], 2); ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+  </div>
 </div>
 
 <!-- Recent Payments -->
@@ -451,205 +539,218 @@ require_once 'partials/header.php';
   <div class="card-header">
     <h3>Recent Payments</h3>
   </div>
-  <div class="card-subtitle">Latest vendor payments</div>
-  
-  <?php if (empty($recentPayments)): ?>
-    <p class="muted" style="padding: 16px 0;">No recent payments.</p>
-  <?php else: ?>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Vendor</th>
-            <th>Description</th>
-            <th style="text-align: right;">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($recentPayments as $p): ?>
+  <div class="card-body">
+    <div class="card-subtitle">Latest vendor payments</div>
+    
+    <?php if (empty($recentPayments)): ?>
+      <p class="muted">No recent payments.</p>
+    <?php else: ?>
+      <div class="table-wrapper">
+        <table>
+          <thead>
             <tr>
-              <td><?php echo htmlspecialchars($p['paid_date']); ?></td>
-              <td><?php echo htmlspecialchars($p['vendor_name'] ?? '-'); ?></td>
-              <td><?php echo htmlspecialchars($p['description'] ?? '-'); ?></td>
-              <td style="text-align: right;">$<?php echo number_format($p['amount'], 2); ?></td>
+              <th>Date</th>
+              <th>Vendor</th>
+              <th>Description</th>
+              <th style="text-align: right;">Amount</th>
             </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-  <?php endif; ?>
+          </thead>
+          <tbody>
+            <?php foreach ($recentPayments as $p): ?>
+              <tr>
+                <td><?php echo htmlspecialchars($p['paid_date']); ?></td>
+                <td><?php echo htmlspecialchars($p['vendor_name'] ?? '-'); ?></td>
+                <td><?php echo htmlspecialchars($p['description'] ?? '-'); ?></td>
+                <td class="text-right">$<?php echo number_format($p['amount'], 2); ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+  </div>
 </div>
 
 <!-- Charts -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Get theme colors
-    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-    const textColor = isDark ? '#F8FAFC' : '#0F172A';
-    const gridColor = isDark ? '#334155' : '#E2E8F0';
-    
-    // Chart.js defaults
-    Chart.defaults.color = textColor;
-    Chart.defaults.borderColor = gridColor;
-    
-    // Project Status Chart (Doughnut)
-    const projectCtx = document.getElementById('projectStatusChart');
-    if (projectCtx) {
-        new Chart(projectCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Active', 'Planned', 'On Hold', 'Complete'],
-                datasets: [{
-                    data: [
-                        <?php echo $projectStats['active']; ?>,
-                        <?php echo $projectStats['planned']; ?>,
-                        <?php echo $projectStats['on_hold']; ?>,
-                        <?php echo $projectStats['complete']; ?>
-                    ],
-                    backgroundColor: [
-                        '#3B82F6', // Blue - Active
-                        '#6366F1', // Indigo - Planned
-                        '#F59E0B', // Amber - On Hold
-                        '#22C55E'  // Green - Complete
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    }
-                },
-                cutout: '60%'
-            }
-        });
-    }
-    
-    // Vendor Type Chart (Pie)
-    const vendorCtx = document.getElementById('vendorTypeChart');
-    if (vendorCtx) {
-        const vendorTypes = <?php echo json_encode(array_keys($vendorStats['by_type'])); ?>;
-        const vendorCounts = <?php echo json_encode(array_values($vendorStats['by_type'])); ?>;
+(function() {
+    function getThemeColors() {
+        const html = document.documentElement;
+        let theme = html.getAttribute('data-theme');
         
-        new Chart(vendorCtx, {
-            type: 'pie',
-            data: {
-                labels: vendorTypes,
-                datasets: [{
-                    data: vendorCounts,
-                    backgroundColor: [
-                        '#F97316', // Orange
-                        '#3B82F6', // Blue
-                        '#22C55E', // Green
-                        '#8B5CF6', // Purple
-                        '#EC4899', // Pink
-                        '#06B6D4'  // Cyan
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true
-                        }
-                    }
-                }
-            }
-        });
+        if (theme === 'system') {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            theme = prefersDark ? 'dark' : 'light';
+        }
+        
+        const isDark = theme !== 'light';
+        return {
+            isDark,
+            textColor: isDark ? '#F8FAFC' : '#0F172A',
+            gridColor: isDark ? '#334155' : '#E2E8F0',
+            tickColor: isDark ? '#94A3B8' : '#64748B',
+            legendColor: isDark ? '#F8FAFC' : '#334155'
+        };
     }
     
-    // Task Status Chart (Doughnut)
-    const taskCtx = document.getElementById('taskStatusChart');
-    if (taskCtx) {
-        new Chart(taskCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Completed', 'In Progress', 'Pending', 'Cancelled'],
-                datasets: [{
-                    data: [
-                        <?php echo $taskStats['completed']; ?>,
-                        <?php echo $taskStats['in_progress']; ?>,
-                        <?php echo $taskStats['pending']; ?>,
-                        <?php echo $taskStats['cancelled']; ?>
-                    ],
-                    backgroundColor: [
-                        '#22C55E', // Green - completed
-                        '#F59E0B', // Yellow - in progress
-                        '#3B82F6', // Blue - pending
-                        '#6B7280'  // Gray - cancelled
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
-    // Payment Trend Chart (Line)
-    const trendCtx = document.getElementById('paymentTrendChart');
-    if (trendCtx) {
-        const monthlyData = <?php echo $monthlyPaymentsJson; ?>;
-        new Chart(trendCtx, {
-            type: 'line',
-            data: {
-                labels: monthlyData.labels || [],
-                datasets: [{
-                    label: 'Payments',
-                    data: monthlyData.data || [],
-                    borderColor: '#F97316',
-                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#F97316'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+    function initCharts() {
+        if (typeof Chart === 'undefined') return;
+        
+        const theme = getThemeColors();
+        Chart.defaults.color = theme.textColor;
+        Chart.defaults.borderColor = theme.gridColor;
+        
+        // Project Status Chart (Doughnut)
+        const projectCtx = document.getElementById('projectStatusChart');
+        if (projectCtx) {
+            new Chart(projectCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Active', 'Planned', 'On Hold', 'Complete'],
+                    datasets: [{
+                        data: [
+                            <?php echo $projectStats['active']; ?>,
+                            <?php echo $projectStats['planned']; ?>,
+                            <?php echo $projectStats['on_hold']; ?>,
+                            <?php echo $projectStats['complete']; ?>
+                        ],
+                        backgroundColor: ['#3B82F6', '#6366F1', '#F59E0B', '#22C55E'],
+                        borderWidth: 0
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + (value / 1000) + 'K';
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: theme.legendColor,
+                                padding: 16,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+        
+        // Vendor Type Chart (Pie)
+        const vendorCtx = document.getElementById('vendorTypeChart');
+        if (vendorCtx) {
+            new Chart(vendorCtx, {
+                type: 'pie',
+                data: {
+                    labels: <?php echo json_encode(array_keys($vendorStats['by_type'])); ?>,
+                    datasets: [{
+                        data: <?php echo json_encode(array_values($vendorStats['by_type'])); ?>,
+                        backgroundColor: ['#F97316', '#3B82F6', '#22C55E', '#8B5CF6', '#EC4899', '#06B6D4'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: theme.legendColor,
+                                padding: 12,
+                                usePointStyle: true,
+                                font: { size: 12 }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
+        
+        // Task Status Chart (Doughnut)
+        const taskCtx = document.getElementById('taskStatusChart');
+        if (taskCtx) {
+            new Chart(taskCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'In Progress', 'Pending', 'Cancelled'],
+                    datasets: [{
+                        data: [
+                            <?php echo $taskStats['completed']; ?>,
+                            <?php echo $taskStats['in_progress']; ?>,
+                            <?php echo $taskStats['pending']; ?>,
+                            <?php echo $taskStats['cancelled']; ?>
+                        ],
+                        backgroundColor: ['#22C55E', '#F59E0B', '#3B82F6', '#6B7280'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: theme.legendColor,
+                                padding: 12,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Payment Trend Chart (Line)
+        const trendCtx = document.getElementById('paymentTrendChart');
+        if (trendCtx) {
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: <?php echo $monthlyPaymentsJson; ?>.labels || [],
+                    datasets: [{
+                        label: 'Payments',
+                        data: <?php echo $monthlyPaymentsJson; ?>.data || [],
+                        borderColor: '#F97316',
+                        backgroundColor: theme.isDark ? 'rgba(249, 115, 22, 0.15)' : 'rgba(249, 115, 22, 0.25)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#F97316'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            ticks: { color: theme.tickColor },
+                            grid: { color: theme.gridColor, drawBorder: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { 
+                                color: theme.tickColor,
+                                callback: function(value) { return '$' + (value / 1000) + 'K'; }
+                            },
+                            grid: { color: theme.gridColor, drawBorder: false }
+                        }
+                    }
+                }
+            });
+        }
     }
-});
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCharts);
+    } else {
+        initCharts();
+    }
+})();
 </script>
 
 <?php require_once 'partials/footer.php'; ?>

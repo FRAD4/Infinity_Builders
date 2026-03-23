@@ -334,11 +334,11 @@ label {
 }
 
 .card-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-color);
+    padding: 16px 20px 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
 }
 
 .card-header h3 {
@@ -376,11 +376,11 @@ label {
 }
 
 .card-subtitle {
-    padding: 8px 20px;
-    font-size: 13px;
-    color: var(--text-secondary);
+    padding: 6px 20px;
+    font-size: 12px;
+    color: var(--text-muted);
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
+    margin: 0;
 }
 
 .card-body {
@@ -391,6 +391,16 @@ label {
     padding: 16px 20px;
     border-top: 1px solid var(--border-color);
     background: var(--bg-secondary);
+}
+
+/* Card body - for consistent padding */
+.card-body {
+    padding: 16px 20px;
+}
+
+/* Right aligned text utility */
+.text-right {
+    text-align: right !important;
 }
 
 /* ========================================
