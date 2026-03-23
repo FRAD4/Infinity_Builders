@@ -48,7 +48,7 @@ Sistema de gestión integral para empresas de construcción, desarrollado con **
 
 | Dark Mode | Light Mode |
 |-----------|------------|
-| ![Dashboard Dark](https://raw.githubusercontent.com/FRAD4/Infinity_Builders/main/.github/screenshots/dashboard-dark.png) | ![Dashboard Light](https://raw.githubusercontent.com/FRAD4/Infinity_Builders/main/.github/screenshots/dashboard-light.png) |
+| ![Dashboard Dark](https://raw.githubusercontent.com/FRAD4/Infinity_Builders/master/.github/screenshots/dashboard-dark.png) | ![Dashboard Light](https://raw.githubusercontent.com/FRAD4/Infinity_Builders/master/.github/screenshots/dashboard-light.png) |
 
 *Dashboard con estadísticas de proyectos, gráficos de presupuesto y actividad de pagos*
 
@@ -241,10 +241,10 @@ Copyright © 2026 Franco Dall'Oglio. All rights reserved.
 
 ## 👤 Author
 
-**Franco Dall'Oglio**
+**Franco Dall'Oglio** — Full Stack Developer
 
 - GitHub: [@FRAD4](https://github.com/FRAD4)
-- LinkedIn: [franco-dall-oglio](https://www.linkedin.com/in/franco-dall-oglio-258255237)
+- LinkedIn: [Franco Dall'Oglio](https://www.linkedin.com/in/franco-dall-oglio-258255237)
 - Email: francodalloglio@hotmail.com
 
 ---
