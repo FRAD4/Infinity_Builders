@@ -384,17 +384,13 @@ require_once 'partials/header.php';
 </div>
 <?php endif; ?>
 
-<!-- Filters -->
-<div class="card" style="margin-top: 20px;">
-  <form method="get" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
-    <div class="form-group" style="flex: 1; min-width: 200px;">
-      <label>Search</label>
-      <input type="text" name="search" value="<?php echo htmlspecialchars($filters['search']); ?>" placeholder="Project or client name...">
-    </div>
-    
-    <div class="form-group" style="min-width: 150px;">
-      <label>Status</label>
-      <select name="status">
+<!-- Filters - Compact horizontal layout -->
+<div class="card filter-bar" style="margin-top: 20px; padding: 12px 16px;">
+  <form method="get" class="filter-form">
+    <div class="filter-group">
+      <input type="text" name="search" value="<?php echo htmlspecialchars($filters['search']); ?>" placeholder="Search projects..." class="filter-input">
+      
+      <select name="status" class="filter-select">
         <option value="">All Statuses</option>
         <option value="all" <?php echo ($filters['status'] ?? '') === 'all' ? 'selected' : ''; ?>>All</option>
         <option value="Planned" <?php echo ($filters['status'] ?? '') === 'Planned' ? 'selected' : ''; ?>>Planned</option>
@@ -402,18 +398,14 @@ require_once 'partials/header.php';
         <option value="On Hold" <?php echo ($filters['status'] ?? '') === 'On Hold' ? 'selected' : ''; ?>>On Hold</option>
         <option value="Complete" <?php echo ($filters['status'] ?? '') === 'Complete' ? 'selected' : ''; ?>>Complete</option>
       </select>
-    </div>
-    
-    <div class="form-group">
-      <button type="submit" class="btn"><i class="fa-solid fa-filter"></i> Filter</button>
+      
+      <button type="submit" class="btn btn-sm"><i class="fa-solid fa-filter"></i></button>
       <?php if (!empty($filters['search']) || !empty($filters['status'])): ?>
-      <a href="projects.php" class="btn btn-secondary" style="margin-left: 4px;">Clear</a>
+      <a href="projects.php" class="btn btn-secondary btn-sm">Clear</a>
       <?php endif; ?>
-    </div>
-    
-    <div class="form-group" style="margin-left: auto;">
-      <span class="small-text" style="color: var(--text-muted);">
-        Showing <?php echo count($projects); ?> of <?php echo count($allProjects); ?> projects
+      
+      <span class="filter-count">
+        Showing <?php echo count($projects); ?> of <?php echo count($allProjects); ?>
       </span>
     </div>
   </form>
