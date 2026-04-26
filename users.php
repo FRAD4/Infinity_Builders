@@ -69,9 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chang
         $message = "Password should be at least 6 characters.";
     } else {
         try {
+            require_once 'includes/security.php';
             $hash = hash_password($new_pass);
-            $stmt = $pdo->prepare("UPDATE users SET password_hash = ?, password_algo = 'bcrypt' WHERE id = ?");
+            // Update both columns for consistency - clear old password, set new hash and algo
+            $stmt = $pdo->prepare("UPDATE users SET password = '', password_hash = ?, password_algo = 'bcrypt' WHERE id = ?");
             $stmt->execute([$hash, $user_id]);
+            
+            error_log("ADMIN_PASSWORD_CHANGE: user_id=$user_id, rows=" . $stmt->rowCount());
+            
             $message = "Password updated.";
         } catch (Exception $e) {
             $message = "Error updating password: " . $e->getMessage();

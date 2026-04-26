@@ -85,28 +85,77 @@ function renderSearchResults(data) {
     let html = '';
     
     // Projects
-    if (data.results.projects.length > 0) {
+    if (data.results.projects && data.results.projects.length > 0) {
         html += '<div class="global-search-section"><div class="global-search-section-title">Projects</div>';
         data.results.projects.forEach(p => {
-            html += '<a href="' + p.url + '" class="global-search-item"><div class="global-search-item-icon projects"><i class="fa-solid fa-folder-open"></i></div><div class="global-search-item-content"><div class="global-search-item-title">' + p.name + '</div><div class="global-search-item-meta">' + (p.client || '') + ' • ' + p.status + '</div></div></a>';
+            let meta = [];
+            if (p.client) meta.push(p.client);
+            meta.push(p.status);
+            html += '<a href="' + p.url + '" class="global-search-item"><div class="global-search-item-icon projects"><i class="fa-solid fa-folder-open"></i></div><div class="global-search-item-content"><div class="global-search-item-title">' + p.name + '</div><div class="global-search-item-meta">' + meta.join(' • ') + '</div></div></a>';
         });
         html += '</div>';
     }
     
     // Vendors
-    if (data.results.vendors.length > 0) {
+    if (data.results.vendors && data.results.vendors.length > 0) {
         html += '<div class="global-search-section"><div class="global-search-section-title">Vendors</div>';
         data.results.vendors.forEach(v => {
-            html += '<a href="' + v.url + '" class="global-search-item"><div class="global-search-item-icon vendors"><i class="fa-solid fa-users"></i></div><div class="global-search-item-content"><div class="global-search-item-title">' + v.name + '</div><div class="global-search-item-meta">' + (v.type || '') + ' • ' + (v.trade || '') + '</div></div></a>';
+            let meta = [];
+            if (v.type) meta.push(v.type);
+            if (v.trade) meta.push(v.trade);
+            if (v.email) meta.push(v.email);
+            html += '<a href="' + v.url + '" class="global-search-item"><div class="global-search-item-icon vendors"><i class="fa-solid fa-users"></i></div><div class="global-search-item-content"><div class="global-search-item-title">' + v.name + '</div><div class="global-search-item-meta">' + (meta.length ? meta.join(' • ') : 'Vendor') + '</div></div></a>';
         });
         html += '</div>';
     }
     
     // Users
-    if (data.results.users.length > 0) {
+    if (data.results.users && data.results.users.length > 0) {
         html += '<div class="global-search-section"><div class="global-search-section-title">Users</div>';
         data.results.users.forEach(u => {
-            html += '<a href="' + u.url + '" class="global-search-item"><div class="global-search-item-icon users"><i class="fa-solid fa-user"></i></div><div class="global-search-item-content"><div class="global-search-item-title">' + u.name + '</div><div class="global-search-item-meta">' + u.role + ' • ' + (u.email || '') + '</div></div></a>';
+            let meta = [];
+            if (u.role) meta.push(u.role);
+            if (u.email) meta.push(u.email);
+            html += '<a href="' + u.url + '" class="global-search-item"><div class="global-search-item-icon users"><i class="fa-solid fa-user"></i></div><div class="global-search-item-content"><div class="global-search-item-title">' + u.full_name + '</div><div class="global-search-item-meta">' + (meta.length ? meta.join(' • ') : u.username) + '</div></div></a>';
+        });
+        html += '</div>';
+    }
+    
+    // Tasks
+    if (data.results.tasks && data.results.tasks.length > 0) {
+        html += '<div class="global-search-section"><div class="global-search-section-title">Tasks</div>';
+        data.results.tasks.forEach(t => {
+            let meta = [];
+            if (t.project_name) meta.push(t.project_name);
+            if (t.status) meta.push(t.status);
+            html += '<a href="' + t.url + '" class="global-search-item"><div class="global-search-item-icon tasks"><i class="fa-solid fa-check-square"></i></div><div class="global-search-item-content"><div class="global-search-item-title">' + t.title + '</div><div class="global-search-item-meta">' + (meta.length ? meta.join(' • ') : 'Task') + '</div></div></a>';
+        });
+        html += '</div>';
+    }
+    
+    // Permits
+    if (data.results.permits && data.results.permits.length > 0) {
+        html += '<div class="global-search-section"><div class="global-search-section-title">Permits</div>';
+        data.results.permits.forEach(pm => {
+            let meta = [];
+            if (pm.project_name) meta.push(pm.project_name);
+            if (pm.city) meta.push(pm.city);
+            meta.push(pm.status);
+            html += '<a href="' + pm.url + '" class="global-search-item"><div class="global-search-item-icon permits"><i class="fa-solid fa-file-contract"></i></div><div class="global-search-item-content"><div class="global-search-item-title">' + pm.permit_number + '</div><div class="global-search-item-meta">' + meta.join(' • ') + '</div></div></a>';
+        });
+        html += '</div>';
+    }
+    
+    // Inspections
+    if (data.results.inspections && data.results.inspections.length > 0) {
+        html += '<div class="global-search-section"><div class="global-search-section-title">Inspections</div>';
+        data.results.inspections.forEach(i => {
+            let meta = [];
+            if (i.project_name) meta.push(i.project_name);
+            if (i.city) meta.push(i.city);
+            if (i.inspection_type) meta.push(i.inspection_type);
+            meta.push(i.status);
+            html += '<a href="' + i.url + '" class="global-search-item"><div class="global-search-item-icon inspections"><i class="fa-solid fa-clipboard-check"></i></div><div class="global-search-item-content"><div class="global-search-item-title">Inspection #' + i.id + '</div><div class="global-search-item-meta">' + meta.join(' • ') + '</div></div></a>';
         });
         html += '</div>';
     }
@@ -204,6 +253,69 @@ function markAllRead() {
     // For now, just refresh
     loadNotifications();
 }
+
+// Shortcuts Dropdown (Desktop)
+function toggleShortcuts() {
+    const dropdown = document.getElementById('shortcutsDropdown');
+    dropdown.classList.toggle('show');
+    
+    if (dropdown.classList.contains('show')) {
+        setTimeout(() => {
+            document.addEventListener('click', closeShortcutsOutside);
+        }, 100);
+    }
+}
+
+function closeShortcutsOutside(e) {
+    const dropdown = document.getElementById('shortcutsDropdown');
+    const btn = document.getElementById('shortcutsBtn');
+    if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+        dropdown.classList.remove('show');
+        document.removeEventListener('click', closeShortcutsOutside);
+    }
+}
+
+function navigateTo(url) {
+    window.location.href = url;
+}
+
+function navigateAndCreate(url) {
+    window.location.href = url + '?create=1';
+}
+
+// Mobile Shortcuts FAB
+function toggleMobileShortcuts() {
+    const panel = document.getElementById('mobileShortcutsPanel');
+    const fab = document.querySelector('.mobile-shortcuts-fab');
+    panel.classList.toggle('show');
+    
+    if (panel.classList.contains('show')) {
+        setTimeout(() => {
+            document.addEventListener('click', closeMobileShortcutsOutside);
+        }, 100);
+    }
+}
+
+function closeMobileShortcutsOutside(e) {
+    const panel = document.getElementById('mobileShortcutsPanel');
+    const fab = document.querySelector('.mobile-shortcuts-fab');
+    if (!panel.contains(e.target) && !fab.contains(e.target)) {
+        panel.classList.remove('show');
+        document.removeEventListener('click', closeMobileShortcutsOutside);
+    }
+}
+
+// Mobile Search Input Handler
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    if (mobileSearchInput) {
+        mobileSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim()) {
+                openGlobalSearch();
+            }
+        });
+    }
+});
 </script>
 
 <!-- App JS -->

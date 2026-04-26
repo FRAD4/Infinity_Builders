@@ -130,7 +130,8 @@ try {
             p.total_budget,
             COALESCE(SUM(vp.amount), 0) as paid
         FROM projects p
-        LEFT JOIN vendor_payments vp ON vp.vendor_id IN (SELECT id FROM vendors WHERE 1=1)
+        LEFT JOIN project_vendors pv ON pv.project_id = p.id
+        LEFT JOIN vendor_payments vp ON vp.vendor_id = pv.vendor_id
         WHERE p.total_budget > 0
         GROUP BY p.id
         ORDER BY (COALESCE(SUM(vp.amount), 0) / p.total_budget) DESC
@@ -253,7 +254,7 @@ require_once 'partials/header.php';
       
       <div style="margin-top: 16px; padding-top: 12px; border-top: 2px solid var(--border-color);">
         <div style="display: flex; justify-content: space-between;">
-          <span>Total Budget</span>
+          <span>Total Agreement Amount</span>
           <strong class="text-primary">$<?php echo number_format($projectStats['total_budget'], 2); ?></strong>
         </div>
       </div>

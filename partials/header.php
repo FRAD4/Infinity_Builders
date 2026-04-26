@@ -70,8 +70,7 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
   <!-- Logo & Company -->
   <div class="sidebar-header">
     <div class="sidebar-logo">
-      <img src="assets/infinity-logo.webp" alt="Infinity Builders" onerror="this.style.display='none'">
-      <span class="sidebar-logo-text">Infinity</span>
+      <img src="assets/infinity-logo.png" alt="Infinity Builders" onerror="this.style.display='none'">
     </div>
   </div>
   
@@ -98,6 +97,16 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
       <a class="nav-item<?php echo ($currentPage ?? '') === 'vendors' ? ' active' : ''; ?>" href="vendors.php">
         <i class="fa-solid fa-users-gear"></i>
         Vendors
+      </a>
+      
+      <a class="nav-item<?php echo ($currentPage ?? '') === 'permits' ? ' active' : ''; ?>" href="permits.php">
+        <i class="fa-solid fa-file-contract"></i>
+        Permits
+      </a>
+      
+      <a class="nav-item<?php echo ($currentPage ?? '') === 'inspections' ? ' active' : ''; ?>" href="inspections.php">
+        <i class="fa-solid fa-clipboard-check"></i>
+        Inspections
       </a>
       
       <?php 
@@ -128,6 +137,15 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
       <a class="nav-item<?php echo ($currentPage ?? '') === 'settings' ? ' active' : ''; ?>" href="settings.php">
         <i class="fa-solid fa-gear"></i>
         Settings
+      </a>
+    </div>
+    
+    <div class="nav-section">
+      <div class="nav-section-title">Training</div>
+      
+      <a class="nav-item<?php echo ($currentPage ?? '') === 'training' ? ' active' : ''; ?>" href="training.php">
+        <i class="fa-solid fa-graduation-cap"></i>
+        Training
       </a>
     </div>
   </nav>
@@ -176,10 +194,39 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
       </div>
       
       <div class="main-header-actions">
+        <!-- Shortcuts Dropdown (Desktop) -->
+        <button class="shortcuts-trigger" onclick="toggleShortcuts()" title="Add new" id="shortcutsBtn">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <div class="shortcuts-dropdown" id="shortcutsDropdown">
+          <div class="shortcuts-dropdown-items">
+            <div class="shortcuts-dropdown-item" onclick="navigateAndCreate('projects.php')">
+              <i class="fa-solid fa-folder-open"></i>
+              Add Project
+            </div>
+            <div class="shortcuts-dropdown-item" onclick="navigateAndCreate('vendors.php')">
+              <i class="fa-solid fa-user"></i>
+              Add Vendor
+            </div>
+            <div class="shortcuts-dropdown-item" onclick="navigateAndCreate('permits.php')">
+              <i class="fa-solid fa-file-contract"></i>
+              Add Permit
+            </div>
+            <div class="shortcuts-dropdown-item" onclick="navigateAndCreate('inspections.php')">
+              <i class="fa-solid fa-clipboard-check"></i>
+              Add Inspection
+            </div>
+          </div>
+        </div>
+        
         <!-- Notifications Bell -->
         <button class="notifications-trigger" onclick="toggleNotifications()" title="Notifications" id="notificationsBtn">
           <i class="fa-solid fa-bell"></i>
           <span class="notifications-badge" id="notificationsBadge" style="display: none;">0</span>
+        </button>
+        <!-- Search Trigger -->
+        <button class="search-trigger" onclick="openGlobalSearch()" title="Search (Ctrl+K)">
+          <i class="fa-solid fa-magnifying-glass"></i>
         </button>
         
         <!-- Theme Toggle -->
@@ -204,6 +251,37 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
   <div class="notifications-list" id="notificationsList">
     <div class="notifications-empty">No notifications</div>
   </div>
+</div>
+
+<!-- Mobile Shortcuts FAB -->
+<button class="mobile-shortcuts-fab" onclick="toggleMobileShortcuts()" title="Menu">
+  <i class="fa-solid fa-ellipsis-vertical"></i>
+</button>
+
+<!-- Mobile Shortcuts Panel -->
+<div class="mobile-shortcuts-panel" id="mobileShortcutsPanel">
+<div class="mobile-shortcuts-items">
+      <div class="shortcuts-dropdown-item" onclick="openGlobalSearch()">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        Search
+      </div>
+      <div class="shortcuts-dropdown-item" onclick="navigateAndCreate('projects.php')">
+        <i class="fa-solid fa-folder-open"></i>
+        Add Project
+      </div>
+      <div class="shortcuts-dropdown-item" onclick="navigateAndCreate('vendors.php')">
+        <i class="fa-solid fa-user"></i>
+        Add Vendor
+      </div>
+      <div class="shortcuts-dropdown-item" onclick="navigateAndCreate('permits.php')">
+        <i class="fa-solid fa-file-contract"></i>
+        Add Permit
+      </div>
+      <div class="shortcuts-dropdown-item" onclick="navigateAndCreate('inspections.php')">
+        <i class="fa-solid fa-clipboard-check"></i>
+        Add Inspection
+      </div>
+    </div>
 </div>
 
 <!-- Global Search Modal -->

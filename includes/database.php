@@ -9,7 +9,7 @@ class Database {
     
     public static function getConnection(): mysqli {
         if (self::$connection === null) {
-            require_once __DIR__ . '/../config.php';
+            require_once __DIR__ . '/../config/config.php';
             
             self::$connection = new mysqli(
                 DB_HOST,

@@ -78,8 +78,19 @@ require_once 'partials/header.php';
   <?php endforeach; ?>
 </div>
 
-<!-- Filters - Compact horizontal layout -->
-<div class="card filter-bar" style="margin-bottom: 20px; padding: 12px 16px;">
+<!-- Filters - Collapsible -->
+<div style="margin-bottom: 20px;">
+  <button type="button" class="btn btn-secondary" onclick="document.getElementById('audit-filters-panel').classList.toggle('hidden'); this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');">
+    <i class="fa-solid fa-chevron-down"></i> Filters
+    <?php if (!empty($filters['entity_type']) || !empty($filters['action_type']) || !empty($filters['from_date']) || !empty($filters['to_date'])): ?>
+    <span style="background: var(--primary); color: white; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; margin-left: 6px;">
+      <?php echo (int)(!empty($filters['entity_type'])) + (int)(!empty($filters['action_type'])) + (int)(!empty($filters['from_date'])) + (int)(!empty($filters['to_date'])); ?>
+    </span>
+    <?php endif; ?>
+  </button>
+</div>
+
+<div id="audit-filters-panel" class="card filter-bar hidden" style="margin-bottom: 20px; padding: 12px 16px;">
   <form method="get" class="filter-form">
     <div class="filter-group">
       <select name="entity_type" class="filter-select">

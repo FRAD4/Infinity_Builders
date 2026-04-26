@@ -4,21 +4,8 @@
  * Returns pending notifications for the current user
  */
 
-// Database connection
-$db_host = 'localhost';
-$db_name = 'infinity_builders';
-$db_user = 'root';
-$db_pass = '';
-
 header('Content-Type: application/json');
-
-try {
-    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (Exception $e) {
-    echo json_encode(['error' => 'Database connection failed']);
-    exit;
-}
+require_once '../partials/init-api.php';
 
 // Start session to get user info
 if (session_status() === PHP_SESSION_NONE) {

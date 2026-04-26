@@ -22,6 +22,20 @@ $message = '';
 require_once 'includes/security.php';
 $csrf_token = csrf_token_generate();
 
+// Get all active projects for payment dropdown
+$projectsForPayment = [];
+try {
+    $stmt = $pdo->query("SELECT id, name FROM projects WHERE status NOT IN ('Completed', 'Cancelled') ORDER BY name");
+    $projectsForPayment = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
+
+// Get all projects for assign project dropdown
+$allProjects = [];
+try {
+    $stmt = $pdo->query("SELECT id, name FROM projects ORDER BY name ASC");
+    $allProjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
+
 // Handle direct open from search (open=vendor_id)
 $openVendorId = $_GET['open'] ?? null;
 
@@ -191,24 +205,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'add_payment') {
             $vendorId = (int)($_POST['payment_vendor_id'] ?? 0);
+            $projectId = (int)($_POST['payment_project_id'] ?? 0);
             $amount = $_POST['payment_amount'] ?? '';
             $paidDate = $_POST['payment_date'] ?? date('Y-m-d');
             $description = trim($_POST['payment_description'] ?? '');
             
+            // Handle invoice file upload
+            $invoicePath = null;
+            if (!empty($_FILES['payment_invoice']['name'])) {
+                $uploadDir = __DIR__ . '/uploads/vendor_invoices/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                
+                $fileName = basename($_FILES['payment_invoice']['name']);
+                $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                $allowedExts = ['pdf', 'jpg', 'jpeg', 'png'];
+                
+                if (in_array($fileExt, $allowedExts)) {
+                    $newFileName = uniqid('invoice_') . '.' . $fileExt;
+                    $targetPath = $uploadDir . DIRECTORY_SEPARATOR . $newFileName;
+                    
+                    if (move_uploaded_file($_FILES['payment_invoice']['tmp_name'], $targetPath)) {
+                        $invoicePath = 'uploads/vendor_invoices/' . $newFileName;
+                    } else {
+                        $message = "Error uploading invoice file.";
+                    }
+                } else {
+                    $message = "Invalid file type. Allowed: PDF, JPG, PNG.";
+                }
+            }
+            
             if ($vendorId <= 0) {
                 $message = "Invalid vendor.";
+            } elseif ($projectId <= 0) {
+                $message = "Please select a project.";
             } elseif ($amount === '' || (float)$amount <= 0) {
                 $message = "Valid amount is required.";
             } else {
                 try {
-                    $stmt = $pdo->prepare("INSERT INTO vendor_payments (vendor_id, amount, paid_date, description) VALUES (?, ?, ?, ?)");
-                    $stmt->execute([$vendorId, (float)$amount, $paidDate, $description ?: null]);
+                    $stmt = $pdo->prepare("INSERT INTO vendor_payments (vendor_id, project_id, amount, paid_date, description, invoice_path) VALUES (?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$vendorId, $projectId, (float)$amount, $paidDate, $description ?: null, $invoicePath]);
                     $message = "Payment recorded.";
                 } catch (Exception $e) {
                     $message = "Error recording payment: " . $e->getMessage();
                 }
             }
         } // end add_payment
+
+        if ($action === 'assign_project_bid') {
+            $vendorId = (int)($_POST['bid_vendor_id'] ?? 0);
+            $projectId = (int)($_POST['bid_project_id'] ?? 0);
+            $bidAmount = floatval($_POST['bid_amount'] ?? 0);
+            
+            if ($vendorId <= 0 || $projectId <= 0) {
+                $message = "Invalid vendor or project.";
+            } elseif ($bidAmount <= 0) {
+                $message = "Valid bid amount is required.";
+            } else {
+                try {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO project_vendors (vendor_id, project_id, bid_amount, assigned_at)
+                        VALUES (?, ?, ?, NOW())
+                        ON DUPLICATE KEY UPDATE bid_amount = VALUES(bid_amount), assigned_at = NOW()
+                    ");
+                    $stmt->execute([$vendorId, $projectId, $bidAmount]);
+                    $message = "Vendor assigned to project successfully.";
+                } catch (Exception $e) {
+                    $message = "Error assigning project: " . $e->getMessage();
+                }
+            }
+        } // end assign_project_bid
     } // end CSRF validado
 }
 
@@ -244,7 +311,7 @@ try {
     }
 } catch (Exception $e) {}
 
-// Load payments summary
+// Load payments summary (by year)
 $paymentsByVendor = [];
 try {
     $stmt = $pdo->query("SELECT vendor_id, YEAR(paid_date) AS yr, SUM(amount) AS total FROM vendor_payments GROUP BY vendor_id, yr ORDER BY yr DESC");
@@ -252,6 +319,40 @@ try {
         $vid = (int)$row['vendor_id'];
         if (!isset($paymentsByVendor[$vid])) $paymentsByVendor[$vid] = [];
         $paymentsByVendor[$vid][] = ['yr' => (int)$row['yr'], 'total' => (float)$row['total']];
+    }
+} catch (Exception $e) {}
+
+// Load detailed payments for modal display
+$paymentsDetailByVendor = [];
+try {
+    $stmt = $pdo->query("
+        SELECT vp.id, vp.vendor_id, vp.project_id, vp.amount, vp.paid_date, vp.description, vp.invoice_path, p.name as project_name 
+        FROM vendor_payments vp 
+        LEFT JOIN projects p ON vp.project_id = p.id 
+        ORDER BY vp.paid_date DESC 
+        LIMIT 100
+    ");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $vid = (int)$row['vendor_id'];
+        if (!isset($paymentsDetailByVendor[$vid])) $paymentsDetailByVendor[$vid] = [];
+        $paymentsDetailByVendor[$vid][] = $row;
+    }
+} catch (Exception $e) {}
+
+// Load vendor projects for modal display
+$vendorProjectsByVendor = [];
+try {
+    $stmt = $pdo->query("
+        SELECT pv.id, pv.vendor_id, pv.project_id, p.name as project_name, pv.bid_amount, pv.assigned_at,
+            (SELECT COALESCE(SUM(amount), 0) FROM vendor_payments WHERE project_id = pv.project_id AND vendor_id = pv.vendor_id) as total_paid
+        FROM project_vendors pv
+        JOIN projects p ON pv.project_id = p.id
+        ORDER BY pv.assigned_at DESC
+    ");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $vid = (int)$row['vendor_id'];
+        if (!isset($vendorProjectsByVendor[$vid])) $vendorProjectsByVendor[$vid] = [];
+        $vendorProjectsByVendor[$vid][] = $row;
     }
 } catch (Exception $e) {}
 
@@ -362,7 +463,7 @@ require_once 'partials/header.php';
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
       <div>
         <h3>Vendors</h3>
-        <div class="card-subtitle">Double-click a row for vendor details & documents.</div>
+        <div class="card-subtitle">Click a row for vendor details & documents.</div>
       </div>
       <button type="button" id="open-create-vendor-modal" class="btn">
         <i class="fa-solid fa-plus"></i> Add Vendor
@@ -564,67 +665,150 @@ require_once 'partials/header.php';
       <button type="button" id="vendor-detail-close" class="modal-close">&times;</button>
     </div>
 
-    <div class="modal-grid">
-      <div class="card">
-        <div class="card-header">
-          <h3>Info</h3>
-          <button type="button" class="btn btn-small" id="send-email-btn">Send Email</button>
+    <!-- Tabs -->
+    <div class="modal-tabs">
+      <button type="button" class="modal-tab active" data-tab="info">Info</button>
+      <button type="button" class="modal-tab" data-tab="documents">Documents</button>
+      <button type="button" class="modal-tab" data-tab="payments">Payments Log</button>
+      <button type="button" class="modal-tab" data-tab="projects-bids">Projects & Bids</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="modal-tab-content">
+      <!-- Info Tab -->
+      <div id="tab-info" class="tab-pane active">
+        <div class="modal-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>Info</h3>
+              <button type="button" class="btn btn-small" id="send-email-btn">Send Email</button>
+            </div>
+            <div class="card-subtitle">Contact, trade &amp; payment summary.</div>
+            <div class="card-body">
+              <div id="detail-info" class="detail-info"></div>
+            </div>
+          </div>
+
+          <!-- ADD PAYMENT CARD -->
+          <?php 
+            $payment_roles = ['admin', 'pm', 'accounting'];
+            if (isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], $payment_roles)): 
+          ?>
+          <div class="card">
+            <div class="card-header"><h3>Record Payment</h3></div>
+            <div class="card-subtitle">Add a payment for this vendor.</div>
+            <div class="card-body">
+              <form method="post" class="modal-form" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="add_payment">
+                <input type="hidden" name="payment_vendor_id" id="payment-vendor-id">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                <div class="form-group">
+                  <label>Project *</label>
+                  <select name="payment_project_id" required>
+                    <option value="">Select project</option>
+                    <?php foreach ($projectsForPayment as $proj): ?>
+                    <option value="<?php echo (int)$proj['id']; ?>">
+                      <?php echo htmlspecialchars($proj['name']); ?>
+                    </option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Amount *</label>
+                  <input type="number" step="0.01" name="payment_amount" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                  <label>Date</label>
+                  <input type="date" name="payment_date" value="<?php echo date('Y-m-d'); ?>">
+                </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" name="payment_description" placeholder="e.g. Invoice #12345 - Phase 1">
+            </div>
+            <div class="form-group">
+              <label>Invoice (PDF/Image)</label>
+              <input type="file" name="payment_invoice" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            <button type="submit" class="btn btn-primary">Record Payment</button>
+              </form>
+            </div>
+          </div>
+          <?php endif; ?>
         </div>
-        <div class="card-subtitle">Contact, trade &amp; payment summary.</div>
-        <div id="detail-info" class="detail-info"></div>
       </div>
 
-      <div class="card">
-        <div class="card-header"><h3>Documents</h3></div>
-        <div class="card-subtitle">Contracts, W-9s, forms and other vendor files.</div>
+      <!-- Documents Tab -->
+      <div id="tab-documents" class="tab-pane">
+        <div class="card">
+          <div class="card-header"><h3>Documents</h3></div>
+          <div class="card-subtitle">Contracts, W-9s, forms and other vendor files.</div>
+          <div class="card-body">
+            <form method="post" enctype="multipart/form-data" class="modal-form">
+              <input type="hidden" name="action" value="upload_vendor_doc">
+              <input type="hidden" name="vendor_id" id="detail-vendor-id">
+              <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+              <div class="form-group">
+                <label>Document name *</label>
+                <input type="text" name="doc_label" placeholder="e.g. Master Subcontract 2025" required>
+              </div>
+              <div class="form-group">
+                <label>File *</label>
+                <input type="file" name="doc_file" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Upload Document</button>
+            </form>
 
-        <form method="post" enctype="multipart/form-data" class="modal-form">
-          <input type="hidden" name="action" value="upload_vendor_doc">
-          <input type="hidden" name="vendor_id" id="detail-vendor-id">
-          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
-          <div class="form-group">
-            <label>Document name *</label>
-            <input type="text" name="doc_label" placeholder="e.g. Master Subcontract 2025" required>
+            <div id="vendor-docs-list"></div>
           </div>
-          <div class="form-group">
-            <label>File *</label>
-            <input type="file" name="doc_file" required>
-          </div>
-          <button type="submit" class="btn btn-primary">Upload Document</button>
-        </form>
-
-        <div id="vendor-docs-list"></div>
+        </div>
       </div>
 
-      <!-- ADD PAYMENT CARD -->
-      <?php 
-        $payment_roles = ['admin', 'pm', 'accounting'];
-        if (isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], $payment_roles)): 
-      ?>
-      <div class="card">
-        <div class="card-header"><h3>Record Payment</h3></div>
-        <div class="card-subtitle">Add a payment for this vendor.</div>
-
-        <form method="post" class="modal-form">
-          <input type="hidden" name="action" value="add_payment">
-          <input type="hidden" name="payment_vendor_id" id="payment-vendor-id">
-          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
-          <div class="form-group">
-            <label>Amount *</label>
-            <input type="number" step="0.01" name="payment_amount" placeholder="0.00" required>
+      <!-- Payments Log Tab -->
+      <div id="tab-payments" class="tab-pane">
+        <div class="card">
+          <div class="card-header"><h3>Payments Log</h3></div>
+          <div class="card-subtitle">All payments for this vendor.</div>
+          <div class="card-body">
+            <div id="vendor-payments-list"></div>
           </div>
-          <div class="form-group">
-            <label>Date</label>
-            <input type="date" name="payment_date" value="<?php echo date('Y-m-d'); ?>">
-          </div>
-          <div class="form-group">
-            <label>Description</label>
-            <input type="text" name="payment_description" placeholder="e.g. Invoice #12345 - Phase 1">
-          </div>
-          <button type="submit" class="btn btn-primary">Record Payment</button>
-        </form>
+        </div>
       </div>
-      <?php endif; ?>
+
+      <!-- Projects & Bids Tab -->
+      <div id="tab-projects-bids" class="tab-pane">
+        <div class="card">
+          <div class="card-header"><h3>Assign to Project</h3></div>
+          <div class="card-body">
+            <form method="post" class="modal-form" id="assign-project-form">
+              <input type="hidden" name="action" value="assign_project_bid">
+              <input type="hidden" name="bid_vendor_id" id="bid-vendor-id">
+              <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+              <div class="form-group">
+                <label>Project *</label>
+                <select name="bid_project_id" required>
+                  <option value="">Select project</option>
+                  <?php foreach ($allProjects as $proj): ?>
+                  <option value="<?php echo (int)$proj['id']; ?>">
+                    <?php echo htmlspecialchars($proj['name']); ?>
+                  </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Bid Amount *</label>
+                <input type="number" step="0.01" name="bid_amount" placeholder="0.00" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Assign to Project</button>
+            </form>
+          </div>
+        </div>
+        <div class="card" style="margin-top: 16px;">
+          <div class="card-header"><h3>Assigned Projects</h3></div>
+          <div class="card-body" id="vendor-projects-list">
+            <!-- Loaded via JS -->
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -738,6 +922,11 @@ require_once 'partials/header.php';
   if (createCloseBtn) createCloseBtn.addEventListener('click', function(e) { e.preventDefault(); if (createModal) createModal.style.display = 'none'; });
   if (createModal) createModal.addEventListener('click', function(e) { if (e.target === createModal && createModal) createModal.style.display = 'none'; });
 
+  // Auto-open create modal if create=1 in URL
+  if (createModal && window.location.search.includes('create=1')) {
+    createModal.style.display = 'flex';
+  }
+
   // Edit vendor modal
   var editModal    = document.getElementById('edit-vendor-modal');
   var editCloseBtn = document.getElementById('edit-vendor-close');
@@ -787,12 +976,15 @@ require_once 'partials/header.php';
   var detailInfo     = document.getElementById('detail-info');
   var detailVendorId = document.getElementById('detail-vendor-id');
   var docsList       = document.getElementById('vendor-docs-list');
+  var paymentsList   = document.getElementById('vendor-payments-list');
 
   var docsByVendor     = <?php echo json_encode($docsByVendor, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
   var paymentsByVendor = <?php echo json_encode($paymentsByVendor, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+  var paymentsDetailByVendor = <?php echo json_encode($paymentsDetailByVendor, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+  var vendorProjectsByVendor = <?php echo json_encode($vendorProjectsByVendor, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
 
   document.querySelectorAll('.vendor-row').forEach(function(row) {
-    row.addEventListener('dblclick', function() {
+    row.addEventListener('click', function() {
       var id      = row.getAttribute('data-id');
       var name    = row.getAttribute('data-name') || '';
       var type    = row.getAttribute('data-type') || '';
@@ -808,6 +1000,10 @@ require_once 'partials/header.php';
       // Also set payment vendor ID
       var paymentVendorId = document.getElementById('payment-vendor-id');
       if (paymentVendorId) paymentVendorId.value = id;
+
+      // Set bid vendor ID for projects-bids tab
+      var bidVendorId = document.getElementById('bid-vendor-id');
+      if (bidVendorId) bidVendorId.value = id;
 
       if (detailInfo) {
         var html = '<div><strong>Type:</strong> ' + (type || '-') + '</div>';
@@ -849,7 +1045,70 @@ require_once 'partials/header.php';
         }
       }
 
+      // Render payment history
+      if (paymentsList) {
+        var payments = paymentsDetailByVendor[id] || [];
+        if (!payments.length) {
+          paymentsList.innerHTML = '<div class="muted">No payments recorded yet.</div>';
+        } else {
+          var payHtml = '<table class="table table-striped" style="font-size: 13px;"><thead><tr><th>Date</th><th>Project</th><th>Amount</th><th>Description</th><th>Invoice</th></tr></thead><tbody>';
+          payments.forEach(function(p) {
+            payHtml += '<tr>';
+            payHtml += '<td>' + (p.paid_date || '-') + '</td>';
+            payHtml += '<td>' + (p.project_name || 'General') + '</td>';
+            payHtml += '<td>$' + Number(p.amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td>';
+            payHtml += '<td>' + (p.description || '-') + '</td>';
+            if (p.invoice_path) {
+              // Use same resolution as vendor_docs - just the relative path
+              var basePath = window.location.pathname.replace(/[^/]*$/, '');
+              payHtml += '<td><a href="' + basePath + p.invoice_path + '" target="_blank" class="btn btn-small btn-secondary">View</a></td>';
+            } else {
+              payHtml += '<td>-</td>';
+            }
+            payHtml += '</tr>';
+          });
+          payHtml += '</tbody></table>';
+          paymentsList.innerHTML = payHtml;
+        }
+      }
+
+      // Render vendor projects list
+      var projectsList = document.getElementById('vendor-projects-list');
+      if (projectsList) {
+        var projects = vendorProjectsByVendor[id] || [];
+        if (!projects.length) {
+          projectsList.innerHTML = '<div class="muted">No projects assigned yet.</div>';
+        } else {
+          var projHtml = '<table class="table table-striped" style="font-size: 13px;"><thead><tr><th>Project</th><th>Bid Amount</th><th>Total Paid</th><th>Assigned</th></tr></thead><tbody>';
+          projects.forEach(function(pj) {
+            projHtml += '<tr>';
+            projHtml += '<td>' + (pj.project_name || '-') + '</td>';
+            projHtml += '<td>$' + Number(pj.bid_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td>';
+            projHtml += '<td>$' + Number(pj.total_paid || 0).toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td>';
+            projHtml += '<td>' + (pj.assigned_at || '-') + '</td>';
+            projHtml += '</tr>';
+          });
+          projHtml += '</tbody></table>';
+          projectsList.innerHTML = projHtml;
+        }
+      }
+
       if (detailModal) detailModal.style.display = 'flex';
+    });
+  });
+
+  // Modal tabs logic
+  document.querySelectorAll('#vendor-detail-modal .modal-tab').forEach(function(tabBtn) {
+    tabBtn.addEventListener('click', function() {
+      var tabId = this.getAttribute('data-tab');
+      
+      // Update active tab button
+      document.querySelectorAll('#vendor-detail-modal .modal-tab').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      
+      // Show correct tab pane
+      document.querySelectorAll('#vendor-detail-modal .tab-pane').forEach(function(pane) { pane.classList.remove('active'); });
+      document.getElementById('tab-' + tabId).classList.add('active');
     });
   });
 

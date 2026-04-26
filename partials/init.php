@@ -4,8 +4,10 @@
  * Includes config and auth check
  */
 
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/security.php';
+require_once __DIR__ . '/../includes/security_headers.php';
+
 require_login();
 
 // Support both 'user_name' and 'username' session keys for compatibility

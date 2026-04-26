@@ -269,7 +269,7 @@ try {
                         <td><?php echo $projectStats['complete']; ?></td>
                     </tr>
                     <tr style="font-weight: bold; border-top: 2px solid #ddd;">
-                        <td>Total Budget</td>
+                        <td>Total Agreement Amount</td>
                         <td>$<?php echo number_format($projectStats['total_budget'], 2); ?></td>
                     </tr>
                 </table>

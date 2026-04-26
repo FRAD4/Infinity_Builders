@@ -6,7 +6,7 @@
  * Provides functions to send various email notifications
  */
 
-require_once __DIR__ . '/config.email.php';
+require_once __DIR__ . '/config/config.email.php';
 require_once __DIR__ . '/includes/email.php';
 
 /**
@@ -16,7 +16,7 @@ function get_admin_emails(): array {
     $emails = [];
     
     try {
-        require_once __DIR__ . '/../config.php';
+        require_once __DIR__ . '/../config/config.php';
         global $db_host, $db_name, $db_user, $db_pass;
         
         $pdo = new PDO(
@@ -59,7 +59,7 @@ function notify_project_alert(int $project_id, string $alert_type, string $messa
 }
 
 function generate_project_alert_email(int $project_id, string $alert_type, string $message): string {
-    require_once __DIR__ . '/../config.php';
+    require_once __DIR__ . '/../config/config.php';
     global $db_host, $db_name, $db_user, $db_pass;
     
     $project = [
@@ -149,7 +149,7 @@ function notify_weekly_summary(): bool {
         return false;
     }
     
-    require_once __DIR__ . '/../config.php';
+    require_once __DIR__ . '/../config/config.php';
     global $db_host, $db_name, $db_user, $db_pass;
     
     $pdo = new PDO(
@@ -265,7 +265,7 @@ function notify_deadline_reminder(int $project_id, int $days_until): bool {
         return false;
     }
     
-    require_once __DIR__ . '/../config.php';
+    require_once __DIR__ . '/../config/config.php';
     global $db_host, $db_name, $db_user, $db_pass;
     
     $pdo = new PDO(
@@ -342,7 +342,7 @@ function generate_deadline_email(array $project, int $days_until): string {
  * Run this periodically (e.g., daily via cron or manual)
  */
 function check_and_notify_project_alerts(): array {
-    require_once __DIR__ . '/../config.php';
+    require_once __DIR__ . '/../config/config.php';
     global $db_host, $db_name, $db_user, $db_pass;
     
     $pdo = new PDO(

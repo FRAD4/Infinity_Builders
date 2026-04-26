@@ -101,6 +101,11 @@ function get_dashboard_preferences(int $userId): array {
         'show_recent_projects' => '1',
         'show_recent_vendors' => '1',
         'show_recent_payments' => '1',
+        'show_recent_activity' => '1',
+        'dashboard_show_projects' => '1',
+        'dashboard_show_permits' => '1',
+        'dashboard_show_financial' => '1',
+        'dashboard_date_filter' => 'all',
         'default_page' => 'dashboard',
         'notifications_enabled' => '1',
         'email_alerts' => '1'

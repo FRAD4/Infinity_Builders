@@ -4,7 +4,7 @@
  * Infinity Builders - Phase 2 Security
  */
 
-require_once 'config.local.php';
+require_once 'config/config.local.php';
 require_once 'includes/security.php';
 require_once 'includes/sanitize.php';
 

@@ -4,7 +4,7 @@
  * Design System Ready
  */
 session_start();
-require_once 'config.php';
+require_once 'config/config.php';
 require_once 'includes/security.php';
 require_once 'includes/sanitize.php';
 
@@ -111,14 +111,26 @@ if ($failed_attempts >= 5 && $now < $lockout_until) {
       text-align: center;
     }
     
+    .login-logo-wrapper {
+      margin-bottom: 28px;
+      padding: 4px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      border-radius: 20px;
+      display: inline-block;
+    }
+    
     .login-logo {
-      margin-bottom: 32px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 16px;
+      padding: 22px 36px;
     }
     
     .login-logo img {
-      width: 80px;
-      height: 80px;
-      border-radius: 16px;
+      width: auto;
+      max-width: 220px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
     }
     
     .login-title {
@@ -173,10 +185,9 @@ if ($failed_attempts >= 5 && $now < $lockout_until) {
 <div class="login-container">
   <div class="login-card animate-slide-up">
     <!-- Logo -->
-    <div class="login-logo">
-      <img src="assets/infinity-logo.webp" alt="Infinity Builders" onerror="this.style.display='none'">
-      <div style="width:80px;height:80px;background:var(--gradient-primary);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto;">
-        <span style="font-size:32px;">🏗️</span>
+    <div class="login-logo-wrapper">
+      <div class="login-logo">
+        <img src="assets/infinity-logo.png" alt="Infinity Builders">
       </div>
     </div>
     

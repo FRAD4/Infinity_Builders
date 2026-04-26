@@ -14,6 +14,19 @@ $userId = $_SESSION['user_id'] ?? 0;
 // Load user preferences for personalization
 require_once __DIR__ . '/includes/preferences.php';
 $preferences = get_dashboard_preferences($userId);
+// Time filter resolution (supports override via query param)
+$timeFilterParam = $_GET['dashboard_time_filter'] ?? null;
+$timeFilterValue = $timeFilterParam ?? ($preferences['dashboard_time_filter'] ?? '30d');
+$timeDays = 0;
+if (preg_match('/^(\\d+)d$/', $timeFilterValue, $m)) {
+    $timeDays = (int)$m[1];
+}
+$timeClause = '';
+$paymentsTimeClause = '';
+if ($timeDays > 0) {
+    $timeClause = " AND created_at >= DATE_SUB(CURDATE(), INTERVAL $timeDays DAY)";
+    $paymentsTimeClause = " AND paid_date >= DATE_SUB(CURDATE(), INTERVAL $timeDays DAY)";
+}
 
 // Apply theme preference
 $themePref = $preferences['dashboard_theme'] ?? 'system';
@@ -43,6 +56,27 @@ try {
     $stmt = $pdo->query("SELECT COUNT(*) AS c FROM projects");
     $stats['projects'] = (int)($stmt->fetch(PDO::FETCH_ASSOC)['c'] ?? 0);
 } catch (Exception $e) {}
+// Build a lightweight activity log (latest 5 records) based on projects and payments within time window
+$activityLog = [];
+// Projects (latest 3)
+try {
+  $stmt = $pdo->query("SELECT id, name, created_at FROM projects WHERE 1 $timeClause ORDER BY created_at DESC LIMIT 3");
+  while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $activityLog[] = ['time'=>$row['created_at'], 'type'=>'Project', 'description'=> 'Created project: '.$row['name']];
+  }
+} catch (Exception $e) {}
+// Payments (latest 2)
+try {
+  $stmt = $pdo->query("SELECT p.paid_date, p.amount, v.name as vendor_name FROM vendor_payments p LEFT JOIN vendors v ON p.vendor_id = v.id WHERE 1 $paymentsTimeClause ORDER BY p.paid_date DESC LIMIT 2");
+  while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $vendor = $row['vendor_name'] ?? '';
+    $activityLog[] = ['time'=>$row['paid_date'], 'type'=>'Payment', 'description'=> 'Paid $'.number_format(($row['amount'] ?? 0),0).' to '.$vendor];
+  }
+} catch (Exception $e) {}
+// Sort by time desc
+usort($activityLog, function($a,$b){ return strcmp($b['time'], $a['time']); });
+// Keep top 5
+$activityLog = array_slice($activityLog, 0, 5);
 
 try {
     $stmt = $pdo->query("SELECT COUNT(*) AS c FROM projects WHERE status = 'Active'");
@@ -102,7 +136,7 @@ $chartData = [
         'active' => $stats['active_projects'],
         'complete' => $stats['complete_projects'],
         'on_hold' => $stats['on_hold_projects'],
-        'planned' => $stats['projects'] - $stats['active_projects'] - $stats['complete_projects'] - $stats['on_hold_projects']
+        'planned' => max(0, $stats['projects'] - $stats['active_projects'] - $stats['complete_projects'] - $stats['on_hold_projects'])
     ],
     'budget' => [
         'total' => $stats['total_budget'],
@@ -180,258 +214,266 @@ require_once 'partials/header.php';
     <p class="text-secondary"><?php echo $roleTitles[$userRole] ?? 'Team Member'; ?> Dashboard • <?php echo date('l, F j, Y'); ?></p>
 </div>
 
-<!-- Role-specific Stats -->
-<?php if ($userRole === 'admin'): ?>
-<div class="stats-grid">
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value"><?php echo $stats['projects']; ?></div>
-    <div class="stat-label">Total Projects</div>
-  </div>
+<!-- Personalization Controls - Toggle Pills -->
+<style>
+.dashboard-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  margin: 12px 0;
+}
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.toggle-pill:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.toggle-pill.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+.toggle-pill input { display: none; }
+.toggle-pill .toggle-icon { font-size: 14px; }
+.time-filter-wrapper {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.time-filter-wrapper label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+</style>
+
+<div class="dashboard-toggles">
+  <label class="toggle-pill<?php echo ($preferences['dashboard_show_projects'] ?? '1') === '1' ? ' active' : ''; ?>">
+    <input type="checkbox" id="pref-projects" <?php echo ($preferences['dashboard_show_projects'] ?? '1') === '1' ? 'checked' : ''; ?>>
+    <span class="toggle-icon"><i class="fa-solid fa-folder-open"></i></span>
+    <span>Projects</span>
+  </label>
   
-  <div class="stat-card stat-card-green">
-    <div class="stat-value"><?php echo $stats['active_projects']; ?></div>
-    <div class="stat-label">Active</div>
-  </div>
+  <label class="toggle-pill<?php echo ($preferences['dashboard_show_permits'] ?? '1') === '1' ? ' active' : ''; ?>">
+    <input type="checkbox" id="pref-permits" <?php echo ($preferences['dashboard_show_permits'] ?? '1') === '1' ? 'checked' : ''; ?>>
+    <span class="toggle-icon"><i class="fa-solid fa-file-contract"></i></span>
+    <span>Permits</span>
+  </label>
   
-  <div class="stat-card stat-card-yellow">
-    <div class="stat-value"><?php echo $stats['on_hold_projects']; ?></div>
-    <div class="stat-label">On Hold</div>
-  </div>
+  <label class="toggle-pill<?php echo ($preferences['dashboard_show_financial'] ?? '1') === '1' ? ' active' : ''; ?>">
+    <input type="checkbox" id="pref-financial" <?php echo ($preferences['dashboard_show_financial'] ?? '1') === '1' ? 'checked' : ''; ?>>
+    <span class="toggle-icon"><i class="fa-solid fa-dollar-sign"></i></span>
+    <span>Financial</span>
+  </label>
   
-  <div class="stat-card stat-card-green">
-    <div class="stat-value"><?php echo $stats['complete_projects']; ?></div>
-    <div class="stat-label">Complete</div>
-  </div>
+  <label class="toggle-pill<?php echo ($preferences['show_charts'] ?? '1') === '1' ? ' active' : ''; ?>">
+    <input type="checkbox" id="pref-charts" <?php echo ($preferences['show_charts'] ?? '1') === '1' ? 'checked' : ''; ?>>
+    <span class="toggle-icon"><i class="fa-solid fa-chart-pie"></i></span>
+    <span>Charts</span>
+  </label>
   
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value"><?php echo $stats['vendors']; ?></div>
-    <div class="stat-label">Vendors</div>
-  </div>
+  <label class="toggle-pill<?php echo ($preferences['dashboard_show_activity'] ?? '1') === '1' ? ' active' : ''; ?>">
+    <input type="checkbox" id="pref-activity" <?php echo ($preferences['dashboard_show_activity'] ?? '1') === '1' ? 'checked' : ''; ?>>
+    <span class="toggle-icon"><i class="fa-solid fa-clock"></i></span>
+    <span>Activity</span>
+  </label>
   
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value"><?php echo $stats['users']; ?></div>
-    <div class="stat-label">Users</div>
+  <div class="time-filter-wrapper">
+    <label>Time:</label>
+    <select id="timeFilter" class="filter-select" style="min-width:110px;">
+      <option value="7d" <?php if (($preferences['dashboard_time_filter'] ?? '30d') === '7d') echo 'selected'; ?>>7 Days</option>
+      <option value="30d" <?php if (($preferences['dashboard_time_filter'] ?? '30d') === '30d') echo 'selected'; ?>>30 Days</option>
+      <option value="90d" <?php if (($preferences['dashboard_time_filter'] ?? '30d') === '90d') echo 'selected'; ?>>90 Days</option>
+      <option value="all" <?php if (($preferences['dashboard_time_filter'] ?? '30d') === 'all') echo 'selected'; ?>>All Time</option>
+    </select>
   </div>
 </div>
 
-<div class="stats-grid">
-  <div class="stat-card stat-card-green">
-    <div class="stat-value">$<?php echo number_format($stats['total_budget'] / 1000, 0); ?>K</div>
-    <div class="stat-label">Total Budget</div>
-  </div>
+<script>
+// Toggle pills - instant save without reload
+(function(){
+  var toggles = [
+    { id: 'pref-projects', key: 'dashboard_show_projects' },
+    { id: 'pref-permits', key: 'dashboard_show_permits' },
+    { id: 'pref-financial', key: 'dashboard_show_financial' },
+    { id: 'pref-charts', key: 'show_charts' },
+    { id: 'pref-activity', key: 'dashboard_show_activity' }
+  ];
   
-  <div class="stat-card stat-card-green">
-    <div class="stat-value">$<?php echo number_format($stats['total_paid'] / 1000, 0); ?>K</div>
-    <div class="stat-label">Total Paid</div>
-  </div>
+  toggles.forEach(function(t){
+    var checkbox = document.getElementById(t.id);
+    var pill = checkbox ? checkbox.parentElement : null;
+    
+    if (checkbox && pill) {
+      checkbox.addEventListener('change', function(){
+        // Instant pill UI update
+        if (this.checked) {
+          pill.classList.add('active');
+        } else {
+          pill.classList.remove('active');
+        }
+        
+        // Save to server (non-blocking, no reload)
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST','includes/save-preference.php',true);
+        xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+        xhr.send('key='+encodeURIComponent(t.key)+'&value='+(this.checked ? '1' : '0'));
+      });
+    }
+  });
   
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value">$<?php echo number_format($stats['paid_this_month'] / 1000, 0); ?>K</div>
-    <div class="stat-label">Paid This Month</div>
+  // Time filter - needs reload for data refresh
+  var tf = document.getElementById('timeFilter');
+  if (tf) tf.addEventListener('change', function(){
+    var url = new URL(window.location.href);
+    url.searchParams.set('dashboard_time_filter', this.value);
+    window.location.href = url.toString();
+  });
+})();
+</script>
+</div>
+
+<!-- Dashboard Redesign: Projects, Permits, Financial, Charts, Activity -->
+<?php if (($preferences['dashboard_show_projects'] ?? '1') === '1'): ?>
+<div class="dashboard-section" style="margin: 20px 0 12px;">
+    <h3 class="section-title">Projects</h3>
+</div>
+<div class="grid grid-4" style="gap:12px;">
+  <?php
+  $projectCounts = ['Active'=>0,'Starting Soon'=>0,'Waiting on Permit'=>0,'Signed'=>0];
+  $stmt = $pdo->query("SELECT status, COUNT(*) AS c FROM projects WHERE 1 $timeClause GROUP BY status");
+  while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+     $s = $row['status'];
+     if (strcasecmp($s, 'Active')===0) $projectCounts['Active'] = (int)$row['c'];
+     if (strcasecmp($s, 'Starting Soon')===0) $projectCounts['Starting Soon'] = (int)$row['c'];
+     if (strcasecmp($s, 'Waiting on Permit')===0) $projectCounts['Waiting on Permit'] = (int)$row['c'];
+     if (strcasecmp($s, 'Signed')===0) $projectCounts['Signed'] = (int)$row['c'];
+  }
+  ?>
+  <div class="stat-card" style="padding:14px;">
+    <div class="stat-value"><?php echo $projectCounts['Active']; ?></div>
+    <div class="stat-label">Active</div>
   </div>
-  
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value">$<?php echo number_format($stats['paid_this_year'] / 1000, 0); ?>K</div>
-    <div class="stat-label">Paid This Year</div>
+  <div class="stat-card" style="padding:14px;">
+    <div class="stat-value"><?php echo $projectCounts['Starting Soon']; ?></div>
+    <div class="stat-label">Starting Soon</div>
   </div>
-  
-  <div class="stat-card stat-card-yellow">
-    <div class="stat-value"><?php echo $stats['budget_utilization']; ?>%</div>
-    <div class="stat-label">Budget Used</div>
+  <div class="stat-card" style="padding:14px;">
+    <div class="stat-value"><?php echo $projectCounts['Waiting on Permit']; ?></div>
+    <div class="stat-label">Waiting on Permit</div>
   </div>
-  
-  <div class="stat-card stat-card-green">
-    <div class="stat-value"><?php echo $stats['completion_rate']; ?>%</div>
+  <?php if ($projectCounts['Signed'] > 0): ?>
+  <div class="stat-card" style="padding:14px;">
+    <div class="stat-value"><?php echo $projectCounts['Signed']; ?></div>
+    <div class="stat-label">Signed</div>
+  </div>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
+
+<?php if (($preferences['dashboard_show_permits'] ?? '1') === '1'): ?>
+<div class="dashboard-section" style="margin: 20px 0 12px;">
+    <h3 class="section-title">Permits</h3>
+</div>
+<div class="grid grid-3" style="gap:12px;">
+  <?php
+  $permCounts = ['Approved'=>0,'In Review'=>0,'Correction Needed'=>0];
+  $stmt = $pdo->query("SELECT status, COUNT(*) AS c FROM permits WHERE 1 $timeClause GROUP BY status");
+  while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+     $s = $row['status'];
+     $lc = strtolower(preg_replace('/[^a-z0-9_]/','_', $s));
+     if (strpos($lc, 'approved') !== false) $permCounts['Approved'] = (int)$row['c'];
+     if (strpos($lc, 'in_review') !== false) $permCounts['In Review'] = (int)$row['c'];
+     if (strpos($lc, 'correction_needed') !== false) $permCounts['Correction Needed'] = (int)$row['c'];
+  }
+  ?>
+  <div class="stat-card" style="padding:14px;">
+    <div class="stat-value"><?php echo $permCounts['Approved']; ?></div>
+    <div class="stat-label">Approved</div>
+  </div>
+  <div class="stat-card" style="padding:14px;">
+    <div class="stat-value"><?php echo $permCounts['In Review']; ?></div>
+    <div class="stat-label">In Review</div>
+  </div>
+  <div class="stat-card" style="padding:14px;">
+    <div class="stat-value"><?php echo $permCounts['Correction Needed']; ?></div>
+    <div class="stat-label">Correction Needed</div>
+  </div>
+</div>
+<?php endif; ?>
+
+<?php if (($preferences['dashboard_show_financial'] ?? '1') === '1'): ?>
+<div class="dashboard-section" style="margin: 20px 0 12px;">
+    <h3 class="section-title">Financial Overview</h3>
+</div>
+<div class="grid grid-3" style="gap:12px;">
+  <?php
+  $budgetTotal = 0; $moneyOut = 0; $stmt = $pdo->query("SELECT COALESCE(SUM(total_budget),0) AS t FROM projects WHERE 1 $timeClause"); $budgetTotal = (float)($stmt->fetch(PDO::FETCH_ASSOC)['t'] ?? 0);
+  $stmt2 = $pdo->query("SELECT COALESCE(SUM(amount),0) AS t FROM vendor_payments WHERE 1 $paymentsTimeClause"); $moneyOut = (float)($stmt2->fetch(PDO::FETCH_ASSOC)['t'] ?? 0);
+  $completionRate = ($budgetTotal > 0) ? (int)round(($moneyOut / $budgetTotal) * 100) : 0;
+  ?>
+  <div class="stat-card" style="padding:14px;">
+    <div class="stat-value">$<?php echo number_format($budgetTotal / 1000, 0); ?>K</div>
+    <div class="stat-label">Total Agreement</div>
+  </div>
+  <div class="stat-card" style="padding:14px;">
+    <div class="stat-value">$<?php echo number_format($moneyOut / 1000, 0); ?>K</div>
+    <div class="stat-label">Money Out</div>
+  </div>
+  <div class="stat-card" style="padding:14px;">
+    <div class="stat-value"><?php echo $completionRate; ?>%</div>
     <div class="stat-label">Completion Rate</div>
   </div>
 </div>
+<?php endif; ?>
 
-<?php elseif ($userRole === 'pm'): ?>
-<div class="stats-grid">
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value"><?php echo $stats['projects']; ?></div>
-    <div class="stat-label">Total Projects</div>
-  </div>
-  
-  <div class="stat-card stat-card-green">
-    <div class="stat-value"><?php echo $stats['active_projects']; ?></div>
-    <div class="stat-label">Active</div>
-  </div>
-  
-  <div class="stat-card stat-card-yellow">
-    <div class="stat-value"><?php echo $stats['on_hold_projects']; ?></div>
-    <div class="stat-label">On Hold</div>
-  </div>
-  
-  <div class="stat-card stat-card-green">
-    <div class="stat-value"><?php echo $stats['complete_projects']; ?></div>
-    <div class="stat-label">Complete</div>
-  </div>
-  
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value"><?php echo $stats['vendors']; ?></div>
-    <div class="stat-label">Vendors</div>
-  </div>
-  
-  <div class="stat-card stat-card-green">
-    <div class="stat-value">$<?php echo number_format($stats['total_budget'] / 1000, 0); ?>K</div>
-    <div class="stat-label">Total Budget</div>
-  </div>
+<?php if (($preferences['show_charts'] ?? '1') === '1'): ?>
+<div class="dashboard-section" style="margin: 20px 0 12px;">
+    <h3 class="section-title">Charts</h3>
 </div>
-
-<?php elseif ($userRole === 'accounting'): ?>
-<div class="stats-grid">
-  <div class="stat-card stat-card-green">
-    <div class="stat-value">$<?php echo number_format($stats['total_budget'] / 1000, 0); ?>K</div>
-    <div class="stat-label">Project Budgets</div>
-  </div>
-  
-  <div class="stat-card stat-card-green">
-    <div class="stat-value">$<?php echo number_format($stats['total_paid'] / 1000, 0); ?>K</div>
-    <div class="stat-label">Total Paid</div>
-  </div>
-  
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value">$<?php echo number_format($stats['paid_this_month'] / 1000, 0); ?>K</div>
-    <div class="stat-label">Paid This Month</div>
-  </div>
-  
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value">$<?php echo number_format($stats['paid_this_year'] / 1000, 0); ?>K</div>
-    <div class="stat-label">Paid This Year</div>
-  </div>
-  
-  <div class="stat-card stat-card-yellow">
-    <div class="stat-value"><?php echo $stats['budget_utilization']; ?>%</div>
-    <div class="stat-label">Budget Used</div>
-  </div>
-  
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value"><?php echo $stats['vendors']; ?></div>
-    <div class="stat-label">Vendors</div>
-  </div>
-</div>
-
-<?php elseif ($userRole === 'estimator'): ?>
-<div class="stats-grid">
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value"><?php echo $stats['projects']; ?></div>
-    <div class="stat-label">Total Projects</div>
-  </div>
-  
-  <div class="stat-card stat-card-green">
-    <div class="stat-value"><?php echo $stats['active_projects']; ?></div>
-    <div class="stat-label">Active</div>
-  </div>
-  
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value">$<?php echo number_format($stats['total_budget'] / 1000, 0); ?>K</div>
-    <div class="stat-label">Total Budget</div>
-  </div>
-</div>
-
-<?php else: // viewer or unknown ?>
-<div class="stats-grid">
-  <div class="stat-card stat-card-blue">
-    <div class="stat-value"><?php echo $stats['projects']; ?></div>
-    <div class="stat-label">Projects</div>
-  </div>
-  
-  <div class="stat-card stat-card-green">
-    <div class="stat-value"><?php echo $stats['active_projects']; ?></div>
-    <div class="stat-label">Active</div>
-  </div>
+<div class="grid grid-2" style="gap:12px;">
+  <div class="card"><div class="card-header"><h3>Budget Overview</h3></div><div style="padding:16px; height:240px; position:relative;"><canvas id="budgetChart"></canvas></div></div>
+  <div class="card"><div class="card-header"><h3>Payment Activity</h3></div><div style="padding:16px; height:240px; position:relative;"><canvas id="paymentChart"></canvas></div></div>
 </div>
 <?php endif; ?>
 
-<!-- Quick Stats with Chart -->
-<?php if (in_array($userRole, ['admin', 'pm', 'accounting']) && ($preferences['show_charts'] ?? '1') === '1'): ?>
-<div class="grid grid-2" style="margin-top: 24px;">
-  <!-- Budget Overview Chart -->
-  <div class="card">
-    <div class="card-header">
-      <h3>Budget Overview</h3>
-    </div>
-    <div style="padding: 16px; height: 220px; position: relative;">
-      <canvas id="budgetChart"></canvas>
-    </div>
-  </div>
-  
-  <!-- Payment Trend -->
-  <div class="card">
-    <div class="card-header">
-      <h3>Payment Activity</h3>
-    </div>
-    <div style="padding: 16px; height: 220px; position: relative;">
-      <canvas id="paymentChart"></canvas>
-    </div>
-  </div>
+<?php if (($preferences['dashboard_show_activity'] ?? '1') === '1'): ?>
+<div class="dashboard-section" style="margin: 20px 0 12px;">
+    <h3 class="section-title">Activity Log</h3>
 </div>
-<?php endif; ?>
-
-<!-- Recent Data Widgets -->
-<div class="grid grid-3" style="margin-top: 24px;">
-<?php if (($preferences['show_recent_projects'] ?? '1') === '1' && !empty($recentProjects)): ?>
-  <div class="card">
-    <div class="card-header">
-      <h3>Recent Projects</h3>
-    </div>
-    <div style="padding: 16px;">
-      <ul class="recent-list">
-        <?php foreach ($recentProjects as $project): ?>
-        <li>
-          <a href="projects.php?open=<?php echo $project['id']; ?>">
-            <?php echo htmlspecialchars($project['name']); ?>
-          </a>
-          <span class="badge badge-<?php echo strtolower($project['status']); ?>"><?php echo $project['status']; ?></span>
-        </li>
+<div class="card" style="margin-top:0;">
+  <div class="card-header"><h3></h3></div>
+  <div class="card-body" style="padding:16px;">
+    <table class="activities-table" style="width:100%; border-collapse: collapse;">
+      <thead><tr><th>Time</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <?php foreach ($activityLog as $al): ?>
+        <tr><td><?php echo htmlspecialchars($al['time']); ?></td><td><?php echo htmlspecialchars($al['type']); ?></td><td><?php echo htmlspecialchars($al['description']); ?></td></tr>
         <?php endforeach; ?>
-      </ul>
-    </div>
+      </tbody>
+    </table>
   </div>
-<?php endif; ?>
-
-<?php if (($preferences['show_recent_vendors'] ?? '1') === '1' && !empty($recentVendors)): ?>
-  <div class="card">
-    <div class="card-header">
-      <h3>Recent Vendors</h3>
-    </div>
-    <div style="padding: 16px;">
-      <ul class="recent-list">
-        <?php foreach ($recentVendors as $vendor): ?>
-        <li>
-          <a href="vendors.php?open=<?php echo $vendor['id']; ?>">
-            <?php echo htmlspecialchars($vendor['name']); ?>
-          </a>
-          <span class="text-secondary"><?php echo htmlspecialchars($vendor['trade'] ?? ''); ?></span>
-        </li>
-        <?php endforeach; ?>
-      </ul>
-    </div>
-  </div>
-<?php endif; ?>
-
-<?php if (($preferences['show_recent_payments'] ?? '1') === '1' && !empty($recentPayments)): ?>
-  <div class="card">
-    <div class="card-header">
-      <h3>Recent Payments</h3>
-    </div>
-    <div style="padding: 16px;">
-      <ul class="recent-list">
-        <?php foreach ($recentPayments as $payment): ?>
-        <li>
-          <span><?php echo htmlspecialchars($payment['vendor_name'] ?? 'Unknown'); ?></span>
-          <span class="text-success">$<?php echo number_format($payment['amount'], 0); ?></span>
-        </li>
-        <?php endforeach; ?>
-      </ul>
-    </div>
-  </div>
-<?php endif; ?>
 </div>
+<?php endif; ?>
+<!-- End redesigned sections -->
 
-<!-- Dashboard Charts Script -->
-<?php if (in_array($userRole, ['admin', 'pm', 'accounting']) && ($preferences['show_charts'] ?? '1') === '1'): ?>
+<!-- Charts Initialization -->
 <script>
 (function() {
     function initCharts() {
@@ -440,28 +482,17 @@ require_once 'partials/header.php';
             return;
         }
         
-        // Get actual resolved theme (not 'system')
+        // Resolve theme
         const htmlEl = document.documentElement;
         let theme = htmlEl.getAttribute('data-theme');
-        
-        // If theme is 'system', resolve it now
         if (theme === 'system') {
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             theme = prefersDark ? 'dark' : 'light';
         }
-        
         const isDark = theme !== 'light';
         
-        // Colors for dark mode
-        const darkText = '#F8FAFC';
-        const darkGrid = '#334155';
-        const darkTick = '#94A3B8';
-        
-        // Colors for light mode
-        const lightText = '#0F172A';
-        const lightGrid = '#E2E8F0';
-        const lightTick = '#64748B';
-        
+        const darkText = '#F8FAFC', darkGrid = '#334155', darkTick = '#94A3B8';
+        const lightText = '#0F172A', lightGrid = '#E2E8F0', lightTick = '#64748B';
         const textColor = isDark ? darkText : lightText;
         const gridColor = isDark ? darkGrid : lightGrid;
         const tickColor = isDark ? darkTick : lightTick;
@@ -477,43 +508,24 @@ require_once 'partials/header.php';
                 data: {
                     labels: ['Total Budget', 'Paid', 'Remaining'],
                     datasets: [{
-                        data: <?php echo json_encode([
-                            $chartData['budget']['total'] ?? 0,
-                            $chartData['budget']['paid'] ?? 0,
-                            $chartData['budget']['remaining'] ?? 0
-                        ]); ?>,
+                        data: [<?php echo $budgetTotal ?? 0; ?>, <?php echo $moneyOut ?? 0; ?>, <?php echo max(0, ($budgetTotal ?? 0) - ($moneyOut ?? 0)); ?>],
                         backgroundColor: ['#3B82F6', '#22C55E', '#F59E0B'],
-                        borderRadius: 6,
-                        borderSkipped: false
+                        borderRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        x: {
-                            ticks: { color: tickColor, font: { weight: '500' } },
-                            grid: { color: gridColor, drawBorder: false }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { 
-                                color: tickColor,
-                                callback: function(value) {
-                                    return '$' + (value / 1000) + 'K';
-                                }
-                            },
-                            grid: { color: gridColor, drawBorder: false }
-                        }
+                        x: { ticks: { color: tickColor }, grid: { color: gridColor } },
+                        y: { beginAtZero: true, ticks: { color: tickColor, callback: function(v) { return '$' + (v/1000) + 'K'; } }, grid: { color: gridColor } }
                     }
                 }
             });
         }
         
-        // Payment Trend (Line)
+        // Payment Activity (Line)
         const paymentCtx = document.getElementById('paymentChart');
         if (paymentCtx) {
             new Chart(paymentCtx, {
@@ -524,7 +536,7 @@ require_once 'partials/header.php';
                         label: 'Payments',
                         data: <?php echo json_encode($paymentTrend['data'] ?? []); ?>,
                         borderColor: '#F97316',
-                        backgroundColor: isDark ? 'rgba(249, 115, 22, 0.15)' : 'rgba(249, 115, 22, 0.25)',
+                        backgroundColor: isDark ? 'rgba(249,115,22,0.15)' : 'rgba(249,115,22,0.25)',
                         fill: true,
                         tension: 0.4,
                         pointRadius: 4,
@@ -534,31 +546,16 @@ require_once 'partials/header.php';
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        x: {
-                            ticks: { color: tickColor, font: { weight: '500' } },
-                            grid: { color: gridColor, drawBorder: false }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { 
-                                color: tickColor,
-                                callback: function(value) {
-                                    return '$' + (value / 1000) + 'K';
-                                }
-                            },
-                            grid: { color: gridColor, drawBorder: false }
-                        }
+                        x: { ticks: { color: tickColor }, grid: { color: gridColor } },
+                        y: { beginAtZero: true, ticks: { color: tickColor, callback: function(v) { return '$' + (v/1000) + 'K'; } }, grid: { color: gridColor } }
                     }
                 }
             });
         }
     }
     
-    // Run after DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initCharts);
     } else {
@@ -566,6 +563,5 @@ require_once 'partials/header.php';
     }
 })();
 </script>
-<?php endif; ?>
 
 <?php require_once 'partials/footer.php'; ?>

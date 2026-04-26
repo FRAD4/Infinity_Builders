@@ -8,7 +8,7 @@
  * Export projects to CSV
  */
 function export_projects_csv(): void {
-    require_once __DIR__ . '/../config.php';
+    require_once __DIR__ . '/../config/config.php';
     
     try {
         global $db_host, $db_name, $db_user, $db_pass;
@@ -72,7 +72,7 @@ function export_projects_csv(): void {
  * Export vendors to CSV
  */
 function export_vendors_csv(): void {
-    require_once __DIR__ . '/../config.php';
+    require_once __DIR__ . '/../config/config.php';
     
     try {
         global $db_host, $db_name, $db_user, $db_pass;
@@ -134,7 +134,7 @@ function export_vendors_csv(): void {
  * Export payments to CSV
  */
 function export_payments_csv(): void {
-    require_once __DIR__ . '/../config.php';
+    require_once __DIR__ . '/../config/config.php';
     
     try {
         global $db_host, $db_name, $db_user, $db_pass;
@@ -190,7 +190,7 @@ function export_payments_csv(): void {
  * Export audit log to CSV
  */
 function export_audit_csv(): void {
-    require_once __DIR__ . '/../config.php';
+    require_once __DIR__ . '/../config/config.php';
     
     try {
         global $db_host, $db_name, $db_user, $db_pass;

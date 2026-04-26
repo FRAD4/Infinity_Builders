@@ -58,6 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     
     if ($_POST['action'] === 'change_password' && $userId > 0) {
+        // Load security helpers
+        require_once __DIR__ . '/includes/security.php';
+        
         $currentPassword = $_POST['current_password'] ?? '';
         $newPassword = $_POST['new_password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
@@ -72,29 +75,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $message = 'Password must be at least 6 characters.';
             $messageType = 'error';
         } else {
-            // Verify current password
+            // Verify current password using security helper
             $stmt = $pdo->prepare("SELECT password, password_algo, password_hash FROM users WHERE id = ?");
             $stmt->execute([$userId]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($user) {
-                $valid = false;
-                if ($user['password_algo'] === 'bcrypt' && $user['password_hash']) {
-                    $valid = password_verify($currentPassword, $user['password_hash']);
-                } else {
-                    $valid = hash('sha256', $currentPassword) === $user['password'];
+                // Use consistent logic: if bcrypt and password_hash exists, use it; otherwise fallback to sha256
+                $storedHash = (!empty($user['password_algo']) && $user['password_algo'] === 'bcrypt' && !empty($user['password_hash'])) 
+                    ? $user['password_hash'] 
+                    : ($user['password'] ?? '');
+                $algo = !empty($user['password_algo']) ? $user['password_algo'] : 'sha256';
+                
+                $valid = verify_password($currentPassword, $storedHash, $algo);
+                
+                // Handle migration case
+                if ($valid === 'migrate') {
+                    $valid = true;
                 }
                 
                 if ($valid) {
-                    $newHash = password_hash($newPassword, PASSWORD_BCRYPT);
-                    $stmt = $pdo->prepare("UPDATE users SET password = '', password_algo = 'bcrypt', password_hash = ? WHERE id = ?");
+                    // Use hash_password helper for consistency (uses cost=12)
+                    $newHash = hash_password($newPassword);
+                    // Clear legacy password column, set new bcrypt hash and algo
+                    $stmt = $pdo->prepare("UPDATE users SET password = '', password_hash = ?, password_algo = 'bcrypt' WHERE id = ?");
                     $stmt->execute([$newHash, $userId]);
+                    
+                    // Log for debugging
+                    error_log("PASSWORD_CHANGE_SUCCESS: user_id=$userId, rows_affected=" . $stmt->rowCount());
+                    
                     $message = 'Password changed successfully!';
                     $messageType = 'success';
                 } else {
                     $message = 'Current password is incorrect.';
                     $messageType = 'error';
                 }
+            } else {
+                $message = 'User not found.';
+                $messageType = 'error';
             }
         }
     }

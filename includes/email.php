@@ -6,15 +6,13 @@
  * Wrapper for sending emails with logging to emails_log table
  */
 
-require_once __DIR__ . '/../config.email.php';
+require_once __DIR__ . '/../config/config.email.php';
 
-// Load PHPMailer classes
-$phpmailer_dir = __DIR__ . '/../vendor/PHPMailer/src/';
-if (is_dir($phpmailer_dir)) {
-    require_once $phpmailer_dir . 'PHPMailer.php';
-    require_once $phpmailer_dir . 'SMTP.php';
-    require_once $phpmailer_dir . 'Exception.php';
-}
+// Load Composer autoloader for PHPMailer
+require_once __DIR__ . '/../vendor/autoload.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 
 /**
  * Send an email with logging
@@ -48,10 +46,10 @@ function send_email(string $to, string $subject, string $body): array {
     $sent = false;
     $error_msg = null;
     
-    // Check if PHPMailer is available
-    if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+    // Check if PHPMailer is available (uses namespace PHPMailer\PHPMailer\PHPMailer)
+    if (class_exists('PHPMailer\PHPMailer\Exception')) {
         try {
-            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            $mail = new PHPMailer();
             $mail->isSMTP();
             $mail->Host = SMTP_HOST;
             $mail->Port = SMTP_PORT;
@@ -73,7 +71,7 @@ function send_email(string $to, string $subject, string $body): array {
             if (!$sent) {
                 $error_msg = $mail->ErrorInfo;
             }
-        } catch (Exception $e) {
+        } catch (PHPMailer\PHPMailer\Exception $e) {
             $error_msg = $e->getMessage();
         }
     } else {
@@ -123,15 +121,26 @@ function log_email(string $to, string $subject, string $body, string $status, ?s
         $body_log = substr($body, 0, 65535);
         $error_log = $error_message ? substr($error_message, 0, 1000) : null;
         
-        // Insert into emails_log
-        require_once __DIR__ . '/../config.php';
-        global $db_host, $db_name, $db_user, $db_pass;
-        $pdo = new PDO(
-            'mysql:host=' . $db_host . ';dbname=' . $db_name . ';charset=utf8mb4',
-            $db_user,
-            $db_pass
-        );
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        // Try to use existing PDO from config.php, otherwise create new connection
+        global $pdo;
+        if (!isset($pdo) || $pdo === null) {
+            require_once __DIR__ . '/../config/config.php';
+        }
+        
+        // Check if emails_log table exists
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS emails_log (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                to_email VARCHAR(255) NOT NULL,
+                subject VARCHAR(500),
+                body TEXT,
+                status VARCHAR(20) NOT NULL,
+                error_message VARCHAR(1000),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_status (status),
+                INDEX idx_created (created_at)
+            )
+        ");
         
         $stmt = $pdo->prepare("
             INSERT INTO emails_log (to_email, subject, body, status, error_message) 
@@ -156,14 +165,8 @@ function log_email(string $to, string $subject, string $body, string $status, ?s
  */
 function get_email_logs(int $limit = 50, ?string $status = null): array {
     try {
-        require_once __DIR__ . '/../config.php';
-        global $db_host, $db_name, $db_user, $db_pass;
-        $pdo = new PDO(
-            'mysql:host=' . $db_host . ';dbname=' . $db_name . ';charset=utf8mb4',
-            $db_user,
-            $db_pass
-        );
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        require_once __DIR__ . '/../config/config.php';
+        global $pdo;
         
         $sql = "SELECT * FROM emails_log";
         if ($status) {
