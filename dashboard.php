@@ -309,12 +309,29 @@ require_once 'partials/header.php';
 // Toggle pills - instant save without reload
 (function(){
   var toggles = [
-    { id: 'pref-projects', key: 'dashboard_show_projects' },
-    { id: 'pref-permits', key: 'dashboard_show_permits' },
-    { id: 'pref-financial', key: 'dashboard_show_financial' },
-    { id: 'pref-charts', key: 'show_charts' },
-    { id: 'pref-activity', key: 'dashboard_show_activity' }
+    { id: 'pref-projects', key: 'dashboard_show_projects', sec: 'sec-projects', grid: 'grid-projects' },
+    { id: 'pref-permits', key: 'dashboard_show_permits', sec: 'sec-permits', grid: 'grid-permits' },
+    { id: 'pref-financial', key: 'dashboard_show_financial', sec: 'sec-financial', grid: 'grid-financial' },
+    { id: 'pref-charts', key: 'show_charts', sec: 'sec-charts', grid: 'grid-charts' },
+    { id: 'pref-activity', key: 'dashboard_show_activity', sec: 'sec-activity', grid: 'grid-activity' }
   ];
+  
+  function setSectionVisibility(toggleId, show) {
+    var info = toggles.find(function(t) { return t.id === toggleId; });
+    if (!info) return;
+    var sec = document.getElementById(info.sec);
+    var grid = document.getElementById(info.grid);
+    if (sec) sec.style.display = show ? '' : 'none';
+    if (grid) grid.style.display = show ? '' : 'none';
+  }
+  
+  // Initialize: hide sections if toggles are unchecked (page loads with unchecked)
+  toggles.forEach(function(t) {
+    var checkbox = document.getElementById(t.id);
+    if (checkbox && !checkbox.checked) {
+      setSectionVisibility(t.id, false);
+    }
+  });
   
   toggles.forEach(function(t){
     var checkbox = document.getElementById(t.id);
@@ -325,8 +342,10 @@ require_once 'partials/header.php';
         // Instant pill UI update
         if (this.checked) {
           pill.classList.add('active');
+          setSectionVisibility(t.id, true);
         } else {
           pill.classList.remove('active');
+          setSectionVisibility(t.id, false);
         }
         
         // Save to server (non-blocking, no reload)
@@ -351,10 +370,10 @@ require_once 'partials/header.php';
 
 <!-- Dashboard Redesign: Projects, Permits, Financial, Charts, Activity -->
 <?php if (($preferences['dashboard_show_projects'] ?? '1') === '1'): ?>
-<div class="dashboard-section" style="margin: 20px 0 12px;">
+<div class="dashboard-section" id="sec-projects" style="margin: 20px 0 12px;">
     <h3 class="section-title">Projects</h3>
 </div>
-<div class="grid grid-4" style="gap:12px;">
+<div class="grid grid-4" id="grid-projects" style="gap:12px;">
   <?php
   $projectCounts = ['Active'=>0,'Starting Soon'=>0,'Waiting on Permit'=>0,'Signed'=>0];
   $stmt = $pdo->query("SELECT status, COUNT(*) AS c FROM projects WHERE 1 $timeClause GROUP BY status");
@@ -388,10 +407,10 @@ require_once 'partials/header.php';
 <?php endif; ?>
 
 <?php if (($preferences['dashboard_show_permits'] ?? '1') === '1'): ?>
-<div class="dashboard-section" style="margin: 20px 0 12px;">
+<div class="dashboard-section" id="sec-permits" style="margin: 20px 0 12px;">
     <h3 class="section-title">Permits</h3>
 </div>
-<div class="grid grid-3" style="gap:12px;">
+<div class="grid grid-3" id="grid-permits" style="gap:12px;">
   <?php
   $permCounts = ['Approved'=>0,'In Review'=>0,'Correction Needed'=>0];
   $stmt = $pdo->query("SELECT status, COUNT(*) AS c FROM permits WHERE 1 $timeClause GROUP BY status");
@@ -419,10 +438,10 @@ require_once 'partials/header.php';
 <?php endif; ?>
 
 <?php if (($preferences['dashboard_show_financial'] ?? '1') === '1'): ?>
-<div class="dashboard-section" style="margin: 20px 0 12px;">
+<div class="dashboard-section" id="sec-financial" style="margin: 20px 0 12px;">
     <h3 class="section-title">Financial Overview</h3>
 </div>
-<div class="grid grid-3" style="gap:12px;">
+<div class="grid grid-3" id="grid-financial" style="gap:12px;">
   <?php
   $budgetTotal = 0; $moneyOut = 0; $stmt = $pdo->query("SELECT COALESCE(SUM(total_budget),0) AS t FROM projects WHERE 1 $timeClause"); $budgetTotal = (float)($stmt->fetch(PDO::FETCH_ASSOC)['t'] ?? 0);
   $stmt2 = $pdo->query("SELECT COALESCE(SUM(amount),0) AS t FROM vendor_payments WHERE 1 $paymentsTimeClause"); $moneyOut = (float)($stmt2->fetch(PDO::FETCH_ASSOC)['t'] ?? 0);
@@ -444,20 +463,20 @@ require_once 'partials/header.php';
 <?php endif; ?>
 
 <?php if (($preferences['show_charts'] ?? '1') === '1'): ?>
-<div class="dashboard-section" style="margin: 20px 0 12px;">
+<div class="dashboard-section" id="sec-charts" style="margin: 20px 0 12px;">
     <h3 class="section-title">Charts</h3>
 </div>
-<div class="grid grid-2" style="gap:12px;">
+<div class="grid grid-2" id="grid-charts" style="gap:12px;">
   <div class="card"><div class="card-header"><h3>Budget Overview</h3></div><div style="padding:16px; height:240px; position:relative;"><canvas id="budgetChart"></canvas></div></div>
   <div class="card"><div class="card-header"><h3>Payment Activity</h3></div><div style="padding:16px; height:240px; position:relative;"><canvas id="paymentChart"></canvas></div></div>
 </div>
 <?php endif; ?>
 
 <?php if (($preferences['dashboard_show_activity'] ?? '1') === '1'): ?>
-<div class="dashboard-section" style="margin: 20px 0 12px;">
+<div class="dashboard-section" id="sec-activity" style="margin: 20px 0 12px;">
     <h3 class="section-title">Activity Log</h3>
 </div>
-<div class="card" style="margin-top:0;">
+<div class="card" id="grid-activity" style="margin-top:0;">
   <div class="card-header"><h3></h3></div>
   <div class="card-body" style="padding:16px;">
     <table class="activities-table" style="width:100%; border-collapse: collapse;">
