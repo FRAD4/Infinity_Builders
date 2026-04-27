@@ -105,6 +105,8 @@ function get_dashboard_preferences(int $userId): array {
         'dashboard_show_projects' => '1',
         'dashboard_show_permits' => '1',
         'dashboard_show_financial' => '1',
+        'dashboard_show_activity' => '1',
+        'dashboard_time_filter' => '30d',
         'dashboard_date_filter' => 'all',
         'default_page' => 'dashboard',
         'notifications_enabled' => '1',

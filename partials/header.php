@@ -119,6 +119,16 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
       </a>
       <?php endif; ?>
       
+      </div>
+    
+    <div class="nav-section">
+      <div class="nav-section-title">Settings</div>
+      
+      <a class="nav-item<?php echo ($currentPage ?? '') === 'settings' ? ' active' : ''; ?>" href="settings.php">
+        <i class="fa-solid fa-gear"></i>
+        Settings
+      </a>
+      
       <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
       <a class="nav-item<?php echo ($currentPage ?? '') === 'users' ? ' active' : ''; ?>" href="users.php">
         <i class="fa-solid fa-user-gear"></i>
@@ -129,15 +139,6 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
         Activity Log
       </a>
       <?php endif; ?>
-    </div>
-    
-    <div class="nav-section">
-      <div class="nav-section-title">Settings</div>
-      
-      <a class="nav-item<?php echo ($currentPage ?? '') === 'settings' ? ' active' : ''; ?>" href="settings.php">
-        <i class="fa-solid fa-gear"></i>
-        Settings
-      </a>
     </div>
     
     <div class="nav-section">
