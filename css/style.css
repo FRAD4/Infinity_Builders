@@ -814,6 +814,9 @@ tr:hover td {
     padding: 12px 0;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-shrink: 0;
 }
 
 .modal-tab {
@@ -844,6 +847,12 @@ tr:hover td {
 
 .tab-pane.active {
     display: block;
+}
+
+/* Modal Tab Content - scrolls independently */
+.modal-tab-content {
+    flex: 1;
+    overflow: auto;
 }
 
 .detail-notes {
@@ -2347,7 +2356,6 @@ tr:hover td {
     width: 100%;
     max-width: 500px;
     max-height: 90vh;
-    overflow-y: auto;
     box-sizing: border-box;
     animation: slideUp 0.3s ease;
     margin: auto;
