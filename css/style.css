@@ -1333,6 +1333,24 @@ tr:hover td {
         min-width: 600px; /* Force scroll on small screens */
     }
     
+    /* Tables inside modal tabs - need scroll wrapper */
+    .tab-pane {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .modal-tab-content table {
+        font-size: 13px;
+        min-width: 600px !important;
+        width: 600px !important;
+        max-width: 600px !important;
+    }
+    
+    .modal-tab-content table th,
+    .modal-tab-content table td {
+        white-space: nowrap;
+    }
+    
     th, td {
         padding: 10px 12px;
         white-space: nowrap;
@@ -2369,6 +2387,13 @@ tr:hover td {
 
 .modal-content.modal-large {
     max-width: 700px;
+}
+
+@media (max-width: 768px) {
+    .modal-content.modal-large {
+        width: 95%;
+        max-width: 95%;
+    }
 }
 
 .modal-content.modal-document {
