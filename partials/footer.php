@@ -202,7 +202,7 @@ function closeNotificationsOutside(e) {
 }
 
 function loadNotifications() {
-    fetch('api/notifications.php')
+    fetch('api/notifications.php', { credentials: 'same-origin' })
         .then(r => r.json())
         .then(data => {
             notificationsData = data.notifications;
@@ -416,6 +416,184 @@ document.addEventListener('DOMContentLoaded', function() {
         init();
     }
 })();
+
+// ========================================
+// Internal Notes Modal Functions
+// ========================================
+
+// Note Modal State
+let noteProjects = [];
+let noteUsers = [];
+let noteModalOpen = false;
+
+function openNoteModal() {
+    // Close shortcuts dropdown first
+    document.getElementById('shortcutsDropdown')?.classList.remove('active');
+    
+    const modal = document.getElementById('noteModal');
+    if (!modal) {
+        createNoteModal();
+        return;
+    }
+    modal.classList.add('active');
+    noteModalOpen = true;
+    loadNoteFormData();
+}
+
+function createNoteModal() {
+    // Create modal HTML
+    const modalHtml = `
+    <div id="noteModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Send Note</h2>
+                <button type="button" class="modal-close" onclick="closeNoteModal()">&times;</button>
+            </div>
+            <form id="noteForm">
+                <div class="form-group">
+                    <label for="noteProject">Project *</label>
+                    <select id="noteProject" required onchange="loadProjectUsers()">
+                        <option value="">Select a project...</option>
+                    </select>
+                </div>
+                <div class="form-group" id="noteUsersGroup" style="display:none;">
+                    <label>Send To:</label>
+                    <div id="noteUsersList" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="noteMessage">Message *</label>
+                    <textarea id="noteMessage" required rows="4" placeholder="Enter note message..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeNoteModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    `;
+    
+    // Insert after main content
+    const main = document.querySelector('main');
+    if (main) {
+        main.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Setup form event
+        document.getElementById('noteForm').addEventListener('submit', submitNote);
+        
+        // Load projects
+        loadNoteFormData();
+    }
+}
+
+function loadNoteFormData() {
+    // Load projects
+    fetch('api/search.php?action=projects_list', { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+            noteProjects = data.projects || [];
+            const projectSelect = document.getElementById('noteProject');
+            if (projectSelect) {
+                let html = '<option value="">Select a project...</option>';
+                noteProjects.forEach(p => {
+                    html += '<option value="' + p.id + '">' + p.name + '</option>';
+                });
+                projectSelect.innerHTML = html;
+            }
+        })
+        .catch(err => console.error('Failed to load projects:', err));
+}
+
+function loadProjectUsers() {
+    const projectId = document.getElementById('noteProject').value;
+    const usersGroup = document.getElementById('noteUsersGroup');
+    const usersList = document.getElementById('noteUsersList');
+    
+    if (!projectId) {
+        usersGroup.style.display = 'none';
+        usersList.innerHTML = '';
+        return;
+    }
+    
+    // Load users for this project
+    fetch('api/internal-notes.php?action=users_by_project&project_id=' + projectId, { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.users && data.users.length > 0) {
+                let html = '';
+                data.users.forEach(u => {
+                    html += '<label style="display: block; padding: 4px 0;">' +
+                        '<input type="checkbox" name="noteTo" value="' + u.id + '" style="margin-right: 8px;">' +
+                        u.username + ' <small style="color: var(--text-muted);">(' + u.role + ')</small></label>';
+                });
+                usersList.innerHTML = html;
+                usersGroup.style.display = 'block';
+            } else {
+                usersList.innerHTML = '<div style="color: var(--text-muted);">No team members in this project</div>';
+                usersGroup.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            console.error('Failed to load users:', err);
+            usersGroup.style.display = 'none';
+        });
+}
+
+function submitNote(e) {
+    e.preventDefault();
+    
+    const projectId = document.getElementById('noteProject').value;
+    const message = document.getElementById('noteMessage').value;
+    const checkboxes = document.querySelectorAll('input[name="noteTo"]:checked');
+    const toUserIds = Array.from(checkboxes).map(c => parseInt(c.value));
+    
+    if (!projectId || !toUserIds.length || !message) {
+        alert('Please fill all fields');
+        return;
+    }
+    
+    // Send to API
+    fetch('api/internal-notes.php?action=create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            project_id: parseInt(projectId),
+            to_user_ids: toUserIds,
+            message: message
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Note sent successfully!');
+            closeNoteModal();
+            loadNotifications();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to send note'));
+        }
+    })
+    .catch(err => {
+        console.error('Failed to send note:', err);
+        alert('Failed to send note');
+    });
+}
+
+function closeNoteModal() {
+    const modal = document.getElementById('noteModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+    noteModalOpen = false;
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    if (noteModalOpen && e.target.classList.contains('modal-overlay')) {
+        closeNoteModal();
+    }
+});
 </script>
 
 </body>

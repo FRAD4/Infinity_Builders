@@ -78,7 +78,8 @@ try {
 
 // Handle direct open from search (open=project_id)
 // Also filter by project name when opening directly
-$openProjectId = $_GET['open'] ?? null;
+$openProjectId = isset($_GET['open']) ? intval($_GET['open']) : null;
+$openTab = isset($_GET['tab']) ? $_GET['tab'] : 'notes';  // Default to notes when opening from notification
 
 // If opening directly, search by that project name to make sure it's visible
 if ($openProjectId) {
@@ -1515,6 +1516,7 @@ require_once 'partials/header.php';
   var detailNotes = document.getElementById('detail-project-notes');
   var detailTimeline = document.getElementById('detail-project-timeline');
   var detailEditBtn = document.getElementById('detail-edit-btn');
+  var currentProjectId = 0;  // Track current project in modal
 
   document.querySelectorAll('.project-row').forEach(function(row) {
     row.addEventListener('click', function(e) {
@@ -1522,6 +1524,7 @@ require_once 'partials/header.php';
       if (e.target.closest('.edit-project-btn')) return;
       
       var id = row.getAttribute('data-id');
+      currentProjectId = id;  // Store for notes loading
       var name = row.getAttribute('data-name') || '';
       var client = row.getAttribute('data-client') || '';
       var status = row.getAttribute('data-status') || '';
@@ -1598,8 +1601,75 @@ require_once 'partials/header.php';
       document.querySelectorAll('.tab-pane').forEach(function(pane) { pane.classList.remove('active'); });
       var targetTab = document.getElementById('tab-' + tabId);
       if (targetTab) targetTab.classList.add('active');
+      
+      // Load internal notes when tab is 'notes'
+      if (tabId === 'notes' && currentProjectId) {
+        loadInternalNotes(currentProjectId);
+      }
     });
   });
+  
+  // Variable to track current project in modal
+  var currentProjectId = 0;
+  
+  // Function to load internal notes
+  function loadInternalNotes(projectId) {
+    fetch('api/internal-notes.php?project_id=' + projectId, { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(data => {
+        var notesContainer = document.getElementById('detail-project-notes');
+        if (!notesContainer) return;
+        
+        // Project notes (general) are already in the container
+        var generalNotes = notesContainer.textContent || '';
+        
+        // Internal notes
+        var internalNotes = data.notes || [];
+        
+        if (internalNotes.length === 0 && !generalNotes) {
+          notesContainer.innerHTML = '<p class="muted">No notes for this project.</p>';
+          return;
+        }
+        
+        var html = '';
+        
+        // Show general notes first
+        if (generalNotes && generalNotes !== 'No notes for this project.') {
+          html += '<div style="margin-bottom: 16px;">' +
+            '<h4>General Notes</h4>' +
+            '<pre style="white-space: pre-wrap; font-family: inherit;">' + generalNotes + '</pre></div>';
+        }
+        
+        // Show internal notes grouped by sender
+        if (internalNotes.length > 0) {
+          html += '<div><h4>Internal Notes</h4></div>';
+          internalNotes.forEach(function(n) {
+            var date = new Date(n.created_at).toLocaleDateString('en-US', { 
+              month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+            });
+            
+            // Get recipient names from to_user_ids
+            var toNames = n.to_user_names || '';
+            
+            html += '<div style="background: var(--bg-secondary); padding: 12px; border-radius: 8px; margin-bottom: 8px;">' +
+              '<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">' +
+                '<strong>' + n.from_user_name + '</strong>' +
+                '<small style="color: var(--text-muted);">' + date + '</small></div>' +
+              '<div style="margin-bottom: 4px;"><small style="color: var(--primary);">To: ' + toNames + '</small></div>' +
+              '<div style="white-space: pre-wrap;">' + n.message + '</div></div>';
+          });
+        }
+        
+        notesContainer.innerHTML = html;
+      })
+      .catch(err => console.error('Failed to load internal notes:', err));
+  }
+  
+  // Update currentProjectId when opening modal
+  var originalOpen = detailNotes;
+  if (originalOpen) {
+    // Keep track of project ID for notes loading
+  }
 
 // Edit button from detail modal
   if (detailEditBtn) {
@@ -1646,16 +1716,21 @@ require_once 'partials/header.php';
   
   // Auto-open project from search
   var openProjectId = '<?php echo $openProjectId; ?>';
+  var openTab = '<?php echo $openTab; ?>';
   if (openProjectId) {
     var row = document.querySelector('.project-row[data-id="' + openProjectId + '"]');
     if (row) {
-      // Simulate dblclick to open detail modal
-      var event = new MouseEvent('dblclick', {
-        bubbles: true,
-        cancelable: true,
-        view: window
-      });
-      row.dispatchEvent(event);
+      // Simulate click on the row - use the existing click handler logic
+      row.click();
+      
+      // Wait for modal to open, then switch to correct tab
+      setTimeout(function() {
+        var tabBtn = document.querySelector('.modal-tab[data-tab="' + openTab + '"]');
+        if (tabBtn) tabBtn.click();
+        
+        // Wait a bit more for notes to load
+        loadInternalNotes(openProjectId);
+      }, 500);
     }
   }
   

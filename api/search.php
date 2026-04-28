@@ -17,6 +17,14 @@ try {
     exit;
 }
 
+// Check for actions FIRST
+if (isset($_GET['action']) && $_GET['action'] === 'projects_list') {
+    $stmt = $pdo->query("SELECT id, name, status FROM projects ORDER BY name ASC LIMIT 100");
+    $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode(['projects' => $projects]);
+    exit;
+}
+
 // Get search query
 $query = trim($_GET['q'] ?? '');
 

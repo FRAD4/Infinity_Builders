@@ -217,6 +217,10 @@ $initialTheme = ($themePref && $themePref !== 'system') ? $themePref : 'system';
               <i class="fa-solid fa-clipboard-check"></i>
               Add Inspection
             </div>
+            <div class="shortcuts-dropdown-item" onclick="openNoteModal()">
+              <i class="fa-solid fa-note-sticky"></i>
+              Send Note
+            </div>
           </div>
         </div>
         
